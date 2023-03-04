@@ -13,10 +13,19 @@ def parse_cmd_line():
     except:
         sys.exit("Please provide proper URL")
 
+def create_socket():
+    try:
+        s = socket.socket(socket.AF_INET, socket.IPPROTO_RAW)
+    except socket.error as msg:
+        sys.exit("Connection cannot be made" + msg)
 
 def main():
 
+    #parse the cmd line to get the url download link
     url = parse_cmd_line()
+
+    # establish connection
+    create_socket()
 
 
 
