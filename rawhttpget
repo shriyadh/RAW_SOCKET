@@ -6,6 +6,25 @@
 import ssl
 import socket
 import sys
+from struct import *
+
+
+# checksum functions needed for calculation checksum
+def checksum(msg):
+    s = 0
+
+    # loop taking 2 characters at a time
+    for i in range(0, len(msg), 2):
+        w = ord(msg[i]) + (ord(msg[i + 1]) << 8)
+        s = s + w
+
+    s = (s >> 16) + (s & 0xffff);
+    s = s + (s >> 16);
+
+    # complement and mask to 4 byte short
+    s = ~s & 0xffff
+
+    return s
 
 def parse_cmd_line():
     try:
@@ -77,6 +96,52 @@ def main():
 
     # establish connection
     socket = create_socket()
+
+    # to prevent kernel from putting headers
+    socket.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
+
+    # create packet
+    packet = ''
+    # IP header
+    create_IP_Header()
+    # TCP header
+    create_TCP_Header()
+
+
+    # WHY USER DATA WHAT ARE WE SENDING
+    user_data = ""
+
+    # pseudo header fields
+    source_address = socket.inet_aton(source_ip)
+    dest_address = socket.inet_aton(dest_ip)
+    placeholder = 0
+    protocol = socket.IPPROTO_TCP
+    tcp_length = len(tcp_header) + len(user_data)
+
+    psh = pack('!4s4sBBH', source_address, dest_address, placeholder, protocol, tcp_length);
+    psh = psh + tcp_header + user_data;
+
+    tcp_check = checksum(psh)
+    # print tcp_checksum
+
+    # make the tcp header again and fill the correct checksum - remember checksum is NOT in network byte order
+    tcp_header = pack('!HHLLBBH', tcp_source, tcp_dest, tcp_seq, tcp_ack_seq, tcp_offset_res, tcp_flags,
+                      tcp_window) + pack('H', tcp_check) + pack('!H', tcp_urg_ptr)
+
+    # final full packet - syn packets dont have any data
+    packet = ip_header + tcp_header + user_data
+
+    # increase count to send more packets
+    count = 3
+
+    for i in range(count):
+        print('sending packet...')
+        # Send the packet finally - the port specified has no effect
+        socket.sendto(packet, (dest_ip, 0))  # put this in a loop if you want to flood the target
+        print('send')
+        time.sleep(1)
+
+    print(    'all packets send")
 
 
 
