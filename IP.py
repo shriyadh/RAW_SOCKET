@@ -5,7 +5,7 @@ class IP:
 
 
 
-    def __init__(self, src_ip, dest_ip):
+    def __init__(self, src_ip='', dest_ip=''):
         self.client_ip = src_ip
         self.server_ip = dest_ip
 
@@ -13,7 +13,7 @@ class IP:
 
 class IP_Packet:
 
-    def __init__(self, src_ip, dest_ip, tcp_seg):
+    def __init__(self, src_ip='', dest_ip='', tcp_seg=''):
         self.version = 4
         self.ihl = 5
         self.type_service = 0

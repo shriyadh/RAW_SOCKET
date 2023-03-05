@@ -4,6 +4,7 @@ from random import randint
 
 from IP import IP
 
+
 def calculate_checksum(msg):
     """
     :param msg: Takes in the message data
@@ -75,7 +76,6 @@ class TCPPacket:
         self.data = data
 
     def create_TCP_packet(self):
-
         tcp_offset_res = (self.offset << 4) + 0
         tcp_flags = self.fin + (self.syn << 1) + (self.rst << 2) + (self.psh << 3) + (self.ack << 4) + (self.urg << 5)
 
@@ -87,7 +87,6 @@ class TCPPacket:
         # pseudo header fields from IP header -- should have source IP, Destination IP, Protocol field
         #  TCP length, TCP header ===== needed for calculating checksum accurately
         tcp_len = len(self.data) + len(tcp_header_without_checksum)
-
 
         pseudo_header = struct.pack('!4s4sBBH', socket.inet_aton(self.client_ip), socket.inet_aton(self.server_ip),
                                     0, socket.IPPROTO_TCP, tcp_len)
@@ -103,3 +102,4 @@ class TCPPacket:
         # final tcp packet --- header with checksum + data [[[[[[ TCP HEADER + DATA ]]]]]]]]]]]]
         tcp_segment = tcp_with_checksum + self.data
 
+        return tcp_segment
