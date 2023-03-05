@@ -6,25 +6,36 @@
 import ssl
 import socket
 import sys
+from random import randint
 from struct import *
+from urllib.parse import urlparse
 
 
-# checksum functions needed for calculation checksum
-def checksum(msg):
-    s = 0
+class RawSocket():
 
-    # loop taking 2 characters at a time
-    for i in range(0, len(msg), 2):
-        w = ord(msg[i]) + (ord(msg[i + 1]) << 8)
-        s = s + w
+    receiver_socket = None
 
-    s = (s >> 16) + (s & 0xffff);
-    s = s + (s >> 16);
+    sender_socket = None
 
-    # complement and mask to 4 byte short
-    s = ~s & 0xffff
+    remote_host = ""
+    local_host  = ""
+    remote_port = -9999
+    local_port = -9999
+    def __init__(self):
+        self.sender_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_RAW)
+        self.receiver_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
+        self.local_port = randint(1001, 65535)
+        sock = socket.socket()
+        sock.connect("project2.5700.network")
+        ip, port = sock.getsockname()
+        self.local_IPAddress = ip
 
-    return s
+
+    def connect(self, host, port):
+
+        self.remote_host = host
+        self.remote_port = 80
+        self.tcp_seq = 0
 
 
 def parse_cmd_line():
@@ -33,9 +44,10 @@ def parse_cmd_line():
     except:
         sys.exit("Please provide proper URL")
 
+    return url
 
-def downLoadFiles(url):
-    file = ""
+
+def get_file_name(url):
     # check if proper path is given, if not set default
     if url.endswith('/'):
         file = "index.html"
@@ -43,14 +55,46 @@ def downLoadFiles(url):
         # split to get file name
         file = url.split('/')[-1]
 
+    return file
+
+
+def make_request(url):
+    return "GET " + url + " HTTP/1.0\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\r\n" \
+                          "Connection: close\r\n\r\n"
+
+
+def start_download(url):
+    # parse file name
+    file = get_file_name(url)
+    # print(file)
+
+    # get host and path
+    eg = "https://david.choffness.com/classes/cs5700f22/2MB.log"
+    urlInformation = urlparse(eg)
+    print(urlInformation)
+
+    host_name = urlInformation.netloc
+    filePath = urlInformation.path
+
+    # make request
+    get_request = make_request(eg)
+    # print(get_request)
+
+    # DNS === not working for david choffness
+    ipAddress = socket.gethostbyname("project2.5700.network")
+    print(ipAddress)
+
+    #sock = RawSocket()
+    #sock.connect(host=ipAddress, port=80)
+
     # open file and read
-    fOpen = open(file, 'wb+')
+    # fOpen = open(file, 'wb+')
 
     # create socket
-    create_socket()
+    # create_socket()
+
 
 def create_socket():
-
     # create tcp header and
     try:
         s = socket.socket(socket.AF_INET, socket.IPPROTO_RAW)
@@ -64,10 +108,7 @@ def main():
     # parse the cmd line to get the url download link
     url = parse_cmd_line()
 
-    downLoadFiles(url)
-
-
-
+    start_download(url)
 
 
 if __name__ == "__main__":
