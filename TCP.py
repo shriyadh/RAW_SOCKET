@@ -2,6 +2,8 @@ import socket
 import struct
 from random import randint
 
+from IP import IP
+
 
 class TCP:
 
@@ -12,7 +14,7 @@ class TCP:
         self.server_port = 0
         self.sq_num = 0
         self.ack_num = 0
-        # ip socket
+        self.ip_socket = IP()
         # cwnd
 
     def connect(self, server_ip, server_port):
