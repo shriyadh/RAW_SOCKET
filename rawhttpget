@@ -110,6 +110,10 @@ def main():
 
     start_download(url)
 
+    sock = socket.socket()
+    sock.connect(("www.google.com", 80))
+
+    print(sock.getsockname())
 
 if __name__ == "__main__":
     main()
