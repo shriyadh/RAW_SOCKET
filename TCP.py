@@ -2,6 +2,26 @@ import socket
 import struct
 from random import randint
 
+def calculate_checksum(msg):
+    """
+    :param msg: Takes in the message data
+    :return: checksum
+    """
+    s = 0
+
+    # loop taking 2 characters at a time
+    for i in range(0, len(msg), 2):
+        w = ord(msg[i]) + (ord(msg[i + 1]) << 8)
+        s = s + w
+
+    s = (s >> 16) + (s & 0xffff)
+    s = s + (s >> 16)
+
+    # complement and mask to 4 byte short
+    s = ~s & 0xffff
+
+    return s
+
 
 class TCP:
 
@@ -47,7 +67,7 @@ class TCPPacket:
         self.syn = 0
         self.rst = 0
         self.psh = 0
-        self.ack = 0
+        self.ack = 0ca
         self.urg = 0
 
         self.data = data
@@ -69,6 +89,7 @@ class TCPPacket:
 
         final_header = pseudo_header + tcp_header_without_checksum + self.data
         self.checksum = calculate_checksum(final_header)
+
 
         # tcp header with checksum
         tcp_with_checksum = struct.pack('!HHLLBBHHH', self.client_port, self.server_port, self.seq_num, self.ack_num,
