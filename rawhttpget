@@ -83,7 +83,7 @@ def start_download(url):
     # add TCP header + IP header to create IP Datagram
     sock = TCP()
     sock.establish_handshake(host_name, 80)
-    sock.send_request()
+    sock.send_request(get_request)
 
 
 

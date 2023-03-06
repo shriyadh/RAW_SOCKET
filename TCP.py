@@ -39,7 +39,7 @@ class TCP:
         self.sq_num = 0
         self.ack_num = 0
         self.ip_socket = IP()
-        # cwnd
+        self.cwnd = 1 #max of 1000 ; set back to 1 if packet dropped
 
     def establish_handshake(self, server_ip, server_port):
 
@@ -64,7 +64,7 @@ class TCP:
         self.ip_socket.client_ip = self.client_ip
         self.ip_socket.server_ip = self.server_ip
 
-        # THREE WAY HANDSHAKE ------ set SEQ num and ACK = 0
+        # THREE WAY HANDSHAKE ------ set SEQ num (random) and ACK = 0
         self.sq_num = randint(0, 100000)
         self.ack_num = 0
         # reset packet parameters
@@ -81,11 +81,12 @@ class TCP:
         #  NEXT --- receive SYN ACK ------------------- HOW ARE WE HANDLING CONGESTION WINDOW??? WHAT CHECKS DO WE NEED?
 
 
+
         # SEND ACK
         tcp_packet = self.get_TCP_segment()
         tcp_packet.ack = 1
         tcp_seg = tcp_packet.pack_TCP_packet()
-        self.ip_socket.send_message(tcp_seg) # NEED MARIAH'S CODE FOR THIS
+        self.ip_socket.send_message(tcp_seg)  # NEED MARIAH'S CODE FOR THIS
 
         ################ THREE WAY HANDSHAKE ESTABLISHED #################
 
@@ -146,7 +147,7 @@ class TCPPacket:
                                         tcp_offset_res, tcp_flags,
                                         self.wnd_size, self.checksum, self.urg_ptr)
 
-        # final tcp packet --- header with checksum + data [[[[[[ TCP HEADER + DATA ]]]]]]]]]]]]
+        # final tcp packet --- header with checksum + data [[[[[[ TCP HEADER + DATA ]]]]]]]]]]]] = TCP SEGMENT
         tcp_segment = tcp_with_checksum + self.data
 
         return tcp_segment
