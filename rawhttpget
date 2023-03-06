@@ -25,9 +25,7 @@ class RawSocket():
         self.sender_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_RAW)
         self.receiver_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
         self.local_port = randint(1001, 65535)
-        sock = socket.socket()
-        sock.connect("project2.5700.network")
-        ip, port = sock.getsockname()
+
         self.local_IPAddress = ip
 
 
@@ -111,10 +109,7 @@ def main():
 
     start_download(url)
 
-    sock = socket.socket()
-    sock.connect(("www.google.com", 80))
 
-    print(sock.getsockname())
 
 if __name__ == "__main__":
     main()
