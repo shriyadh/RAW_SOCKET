@@ -5,12 +5,13 @@ from random import randint
 from IP import IP
 
 
-def calculate_checksum(msg):
+def calculate_checksum(msg=b''):
     """
     :param msg: Takes in the message data
     :return: checksum
     """
     s = 0
+
 
     # if len of msg is odd
     if len(msg) % 2 != 0:
@@ -18,7 +19,8 @@ def calculate_checksum(msg):
 
     # loop taking 2 characters at a time
     for i in range(0, len(msg), 2):
-        w = ord(msg[i]) + (ord(msg[i + 1]) << 8)
+        # removed ord to work w bytes -> ord worked only for string
+        w = msg[i] + (msg[i + 1] << 8)
         s = s + w
 
     s = (s >> 16) + (s & 0xffff)
@@ -42,6 +44,7 @@ class TCP:
         self.cwnd = 1 #max of 1000 ; set back to 1 if packet dropped
 
     def establish_handshake(self, server_ip, server_port):
+        print("here")
 
         # server IP address # DNS === get Server IP Address
         self.server_ip = socket.gethostbyname(server_ip)
@@ -50,8 +53,9 @@ class TCP:
         # get local ip address
         sock = socket.socket()
         try:
-            sock.connect("project2.5700.network")
+            sock.connect(("www.google.com", 80))
             ip, port = sock.getsockname()
+
         except Exception as err:
             raise err
         finally:
@@ -59,7 +63,7 @@ class TCP:
 
         self.client_ip = ip
         # pick up any random port number which is not reserved
-        self.client_port = randint(1024, 655353)
+        self.client_port = randint(1024, 65535)
 
         self.ip_socket.client_ip = self.client_ip
         self.ip_socket.server_ip = self.server_ip
@@ -73,12 +77,24 @@ class TCP:
         tcp_packet.syn = 1
         # pack the TCP packet
         tcp_seg = tcp_packet.pack_TCP_packet()
-
+        print(tcp_seg)
         # pack tcp_seg into IP
         # -----------------------  Call ip function for building IP DATAGRAM
         self.ip_socket.send_message(tcp_seg) # NEED MARIAH'S CODE FOR THIS
 
         #  NEXT --- receive SYN ACK ------------------- HOW ARE WE HANDLING CONGESTION WINDOW??? WHAT CHECKS DO WE NEED?
+
+        # receive TCP SEG FROM IP
+        packet_recv = self.ip_socket.receive_message() # NEED MARIAH"S CODE FOR THIS
+        unpack_recv = TCPPacket()
+        # unpack packet
+        unpack_recv.unpack_received_packet(packet_recv)
+
+        # see if packet is correct
+        if unpack_recv.ack_num == self.sq_num + 1 and packet_recv.syn == 1 and packet_recv.ack == 1:
+            pass
+
+
 
 
 
@@ -124,6 +140,7 @@ class TCPPacket:
         self.data = data
 
     def pack_TCP_packet(self):
+        print(self.client_port, self.server_port)
         tcp_offset_res = (self.offset << 4) + 0
         tcp_flags = self.fin + (self.syn << 1) + (self.rst << 2) + (self.psh << 3) + (self.ack << 4) + (self.urg << 5)
 
@@ -140,15 +157,19 @@ class TCPPacket:
                                     0, socket.IPPROTO_TCP, tcp_len)
 
         final_header = pseudo_header + tcp_header_without_checksum + self.data
+
         self.checksum = calculate_checksum(final_header)
+        print(self.checksum)
 
         # tcp header with checksum
         tcp_with_checksum = struct.pack('!HHLLBBHHH', self.client_port, self.server_port, self.seq_num, self.ack_num,
                                         tcp_offset_res, tcp_flags,
                                         self.wnd_size, self.checksum, self.urg_ptr)
 
+
         # final tcp packet --- header with checksum + data [[[[[[ TCP HEADER + DATA ]]]]]]]]]]]] = TCP SEGMENT
         tcp_segment = tcp_with_checksum + self.data
+        print(tcp_segment)
 
         return tcp_segment
 
@@ -192,3 +213,14 @@ class TCPPacket:
 
 
     # # --------------  CREATE METHOD TO SET FIELDS FOR THE TCP PACKET TO SEND
+
+
+def main():
+    # testing
+    test = TCP()
+    test.establish_handshake("david.choffnes.com", 80)
+
+
+
+if __name__ == "__main__":
+    main()

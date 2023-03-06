@@ -81,9 +81,9 @@ def start_download(url):
     print(get_request)
 
     # add TCP header + IP header to create IP Datagram
-    sock = TCP()
-    sock.establish_handshake(host_name, 80)
-    sock.send_request(get_request)
+    #sock = TCP()
+    #sock.establish_handshake(host_name, 80)
+    #sock.send_request(get_request)
 
 
 
@@ -99,6 +99,7 @@ def main():
     # parse the cmd line to get the url download link
     url = parse_cmd_line()
     print(url)
+
 
     start_download(url)
 
