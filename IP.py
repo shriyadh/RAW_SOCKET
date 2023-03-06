@@ -27,6 +27,7 @@ class IP_Packet:
         self.server_ip = dest_ip
         self.data = tcp_seg
 
+
         def create_IP_packet(self):
 
 

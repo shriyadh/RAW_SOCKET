@@ -41,8 +41,9 @@ class TCP:
         self.ip_socket = IP()
         # cwnd
 
-    def connect(self, server_ip, server_port):
-        # server IP address
+    def establish_handshake(self, server_ip, server_port):
+
+        # server IP address # DNS === get Server IP Address
         self.server_ip = socket.gethostbyname(server_ip)
         # server port is 80 (web)
         self.server_port = server_port
@@ -63,12 +64,30 @@ class TCP:
         self.ip_socket.client_ip = self.client_ip
         self.ip_socket.server_ip = self.server_ip
 
+        # THREE WAY HANDSHAKE ------ set SEQ num and ACK = 0
+        self.sq_num = randint(0, 100000)
+        self.ack_num = 0
+        # reset packet parameters
         tcp_packet = self.get_TCP_segment()
         # send the first SYN to do the three-way handshake
         tcp_packet.syn = 1
+        # pack the TCP packet
         tcp_seg = tcp_packet.pack_TCP_packet()
+
         # pack tcp_seg into IP
         # -----------------------  Call ip function for building IP DATAGRAM
+        self.ip_socket.send_message(tcp_seg)
+
+        #  NEXT --- receive SYN ACK ------------------- HOW ARE WE HANDLING CONGESTION WINDOW??? WHAT CHECKS DO WE NEED?
+
+
+        # SEND ACK
+        tcp_packet = self.get_TCP_segment()
+        tcp_packet.ack = 1
+        tcp_seg = tcp_packet.pack_TCP_packet()
+        self.ip_socket.send_message(tcp_seg)
+
+        ################ THREE WAY HANDSHAKE ESTABLISHED #################
 
     def get_TCP_segment(self):
         tcp_pack = TCPPacket()
@@ -76,6 +95,8 @@ class TCP:
         tcp_pack.client_ip = self.client_ip
         tcp_pack.client_port = self.client_port
         tcp_pack.server_port = self.server_port
+        tcp_pack.seq_num = self.sq_num
+        tcp_pack.ack_num = self.ack_num
         return tcp_pack
 
 
@@ -86,7 +107,7 @@ class TCPPacket:
         self.client_port = src_port
         self.server_ip = dest_ip
         self.server_port = dest_port
-        self.seq_num = randint(0, 100000)
+        self.seq_num = 0
         self.ack_num = 0
         self.offset = 5
         self.wnd_size = 2048

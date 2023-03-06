@@ -9,6 +9,7 @@ import sys
 from random import randint
 from struct import *
 from urllib.parse import urlparse
+from TCP import TCP
 
 
 class RawSocket():
@@ -38,7 +39,7 @@ class RawSocket():
 
 def parse_cmd_line():
     try:
-        url = sys.argv[0]
+        url = sys.argv[1]
     except:
         sys.exit("Please provide proper URL")
 
@@ -64,26 +65,27 @@ def make_request(url):
 def start_download(url):
     # parse file name
     file = get_file_name(url)
-    # print(file)
+    print(file)
 
     # get host and path
-    eg = "https://david.choffness.com/classes/cs5700f22/2MB.log"
-    urlInformation = urlparse(eg)
+    eg = "https://david.choffnes.com/classes/cs5700f22/2MB.log"
+    urlInformation = urlparse(url)
     print(urlInformation)
 
     host_name = urlInformation.netloc
     filePath = urlInformation.path
+    print(filePath)
 
     # make request
-    get_request = make_request(eg)
-    # print(get_request)
+    get_request = make_request(url)
+    print(get_request)
 
-    # DNS === not working for david choffness
-    ipAddress = socket.gethostbyname("project2.5700.network")
-    print(ipAddress)
+    # add TCP header + IP header to create IP Datagram
+    sock = TCP()
+    sock.establish_handshake(host_name, 80)
+    sock.send_request()
 
-    #sock = RawSocket()
-    #sock.connect(host=ipAddress, port=80)
+
 
     # open file and read
     # fOpen = open(file, 'wb+')
@@ -92,20 +94,11 @@ def start_download(url):
     # create_socket()
 
 
-def create_socket():
-    # create tcp header and
-    try:
-        s = socket.socket(socket.AF_INET, socket.IPPROTO_RAW)
-    except socket.error as msg:
-        sys.exit("Connection cannot be made" + msg)
-
-    return s
-
-
 def main():
     # testing
     # parse the cmd line to get the url download link
     url = parse_cmd_line()
+    print(url)
 
     start_download(url)
 
