@@ -24,12 +24,12 @@ Our program design for sending data is also based on the same network flow:
             |<br>
             v<br>
 **TCP LAYER ----> TCP SEGMENT ( DATA + TCP HEADER)**<br>
-            |
-            |
-            |
-            |
-            v
-**IP LAYER ----> IP DATAGRAM ( DATA + TCP HEADER + IP HEADER)**
+            |<br>
+            |<br>
+            |<br>
+            |<br>
+            v<br>
+**IP LAYER ----> IP DATAGRAM ( DATA + TCP HEADER + IP HEADER)**<br>
 
 
 
