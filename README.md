@@ -17,13 +17,13 @@ As the data flows down the different layers, each layer attaches a header to it.
 
 Our program design for sending data is also based on the same network flow: 
 
-**APPLICATION LAYER ----> DATA**\n
-            |\n
-            |
-            |
-            |
-            v
-**TCP LAYER ----> TCP SEGMENT ( DATA + TCP HEADER)**
+**APPLICATION LAYER ----> DATA**'\n'
+            |'\n'
+            |'\n'
+            |'\n'
+            |'\n'
+            v'\n'
+**TCP LAYER ----> TCP SEGMENT ( DATA + TCP HEADER)**'\n'
             |
             |
             |
