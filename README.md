@@ -1,5 +1,5 @@
 # RAW SOCKET PROGRAMMING
-Computer Networking - Project 4 
+Computer Networking - Project 4 <br>
 Project by - Mariah Maynard and Shriya Dhaundiyal
 
 ## **HIGH LEVEL_APPROACH -- UNDERSTANDING PROJECT DESGIN**
@@ -51,7 +51,7 @@ Our program design for **RECEIVING** data is also based on the same network flow
 **APPLICATION LAYER ----> DATA**<br>
 
 
-##FEATURES IMPLEMENTED
+## **FEATURES IMPLEMENTED**
 
 
-##CONTRIBUTIONS AND CHALLENGES FACED 
+## **CONTRIBUTIONS AND CHALLENGES FACED**
