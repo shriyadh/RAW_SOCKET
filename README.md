@@ -15,7 +15,7 @@ As the data flows down the different layers, each layer attaches a header to it.
 
 ![image](https://user-images.githubusercontent.com/110204529/223235111-f7cedea4-3d6e-4dd2-b8ef-9a25460fcfe0.png)
 
-Our program design for **sending** data is also based on the same network flow: PACKING
+Our program design for **SENDING** data is also based on the same network flow: **PACKING**
 
 **APPLICATION LAYER ----> DATA**<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;        |<br>
@@ -34,7 +34,7 @@ Our program design for **sending** data is also based on the same network flow: 
 
 
 
-Our program design for **receivng** data is also based on the same network flow: UNPACKING
+Our program design for **RECEIVING** data is also based on the same network flow: **UNPACKING**
 
 **IP LAYER ----> IP DATAGRAM ( DATA + TCP HEADER + IP HEADER)**<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;        |<br>
@@ -44,9 +44,9 @@ Our program design for **receivng** data is also based on the same network flow:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;        V<br>
 **TCP LAYER ----> TCP SEGMENT ( DATA + TCP HEADER)**<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;        |<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;       |<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;       |<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;       |<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;       V<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;       |<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;       |<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;       |<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;       V<br>
 **APPLICATION LAYER ----> DATA**<br>
 
