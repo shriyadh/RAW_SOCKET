@@ -2,7 +2,7 @@
 Computer Networking - Project 4 
 Project by - Mariah Maynard and Shriya Dhaundiyal
 
-## **UNDERSTANDING PROJECT DESGIN**
+## **HIGH LEVEL_APPROACH -- UNDERSTANDING PROJECT DESGIN**
 
 In order to start this project, we needed an in-depth understanding of the OSI model and the role of each layer. 
 This project required us to get familiar with low-level operations of the internet protocol stack. We had to go beyond implemeting application level protocols (HTTP GET/ RECEIVE) and build IP and TCP headers in each packet for sending and receicing data.
@@ -31,8 +31,8 @@ Our program design for **SENDING** data is also based on the same network flow: 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;       V<br>
 **IP LAYER ----> IP DATAGRAM ( DATA + TCP HEADER + IP HEADER)**<br>
 
-
-
+<br>
+<br>
 
 Our program design for **RECEIVING** data is also based on the same network flow: **UNPACKING**
 
@@ -50,3 +50,8 @@ Our program design for **RECEIVING** data is also based on the same network flow
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;       V<br>
 **APPLICATION LAYER ----> DATA**<br>
 
+
+##FEATURES IMPLEMENTED
+
+
+##CONTRIBUTIONS AND CHALLENGES FACED 
