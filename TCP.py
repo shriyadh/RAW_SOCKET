@@ -76,7 +76,7 @@ class TCP:
 
         # pack tcp_seg into IP
         # -----------------------  Call ip function for building IP DATAGRAM
-        self.ip_socket.send_message(tcp_seg)
+        self.ip_socket.send_message(tcp_seg) # NEED MARIAH'S CODE FOR THIS
 
         #  NEXT --- receive SYN ACK ------------------- HOW ARE WE HANDLING CONGESTION WINDOW??? WHAT CHECKS DO WE NEED?
 
@@ -85,7 +85,7 @@ class TCP:
         tcp_packet = self.get_TCP_segment()
         tcp_packet.ack = 1
         tcp_seg = tcp_packet.pack_TCP_packet()
-        self.ip_socket.send_message(tcp_seg)
+        self.ip_socket.send_message(tcp_seg) # NEED MARIAH'S CODE FOR THIS
 
         ################ THREE WAY HANDSHAKE ESTABLISHED #################
 
