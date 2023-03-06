@@ -80,19 +80,30 @@ class TCP:
         print(tcp_seg)
         # pack tcp_seg into IP
         # -----------------------  Call ip function for building IP DATAGRAM
+
+        # ======================================= TESTTT =================================================
+        self.sender_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_RAW)
+        print("err")
+
+        self.sender_socket.sendto(tcp_seg, (self.server_ip, self.server_port))
+        print("err")
+
+        #====================================== TEST END ===============================================
+
         self.ip_socket.send_message(tcp_seg) # NEED MARIAH'S CODE FOR THIS
 
         #  NEXT --- receive SYN ACK ------------------- HOW ARE WE HANDLING CONGESTION WINDOW??? WHAT CHECKS DO WE NEED?
 
-        # receive TCP SEG FROM IP
+        # receive FROM IP TCP SEG WITHOUT IP HEADERS
         packet_recv = self.ip_socket.receive_message() # NEED MARIAH"S CODE FOR THIS
         unpack_recv = TCPPacket()
         # unpack packet
-        unpack_recv.unpack_received_packet(packet_recv)
+        unpack_recv.unpack_received_packet(packet_recv, self.client_ip, self.server_ip)
 
         # see if packet is correct
-        if unpack_recv.ack_num == self.sq_num + 1 and packet_recv.syn == 1 and packet_recv.ack == 1:
-            pass
+        if unpack_recv.client_port != self.client_port and unpack_recv.server_port != self.server_port:
+            pass #raise err?
+
 
 
 
@@ -173,7 +184,7 @@ class TCPPacket:
 
         return tcp_segment
 
-    def unpack_received_packet(self, recv_segment):
+    def unpack_received_packet(self, recv_segment, client, server):
 
         tcp_header = struct.unpack('!HHLLBBHHH', recv_segment[0:20])
         self.client_port = tcp_header[0]
