@@ -17,19 +17,19 @@ As the data flows down the different layers, each layer attaches a header to it.
 
 Our program design for sending data is also based on the same network flow: 
 
-**APPLICATION LAYER ----> DATA **
+**APPLICATION LAYER ----> DATA**\n
+            |\n
+            |
+            |
+            |
+            v
+**TCP LAYER ----> TCP SEGMENT ( DATA + TCP HEADER)**
             |
             |
             |
             |
             v
-** TCP LAYER ----> TCP SEGMENT ( DATA + TCP HEADER) 
-            |
-            |
-            |
-            |
-            v
-** IP LAYER ----> IP DATAGRAM ( DATA + TCP HEADER + IP HEADER) **
+**IP LAYER ----> IP DATAGRAM ( DATA + TCP HEADER + IP HEADER)**
 
 
 
