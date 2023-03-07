@@ -110,6 +110,12 @@ class TCP:
                 packet_recv = self.ip_socket.receive_message(self.client_ip)  # NEED MARIAH"S CODE FOR THIS
             except:
                 continue
+        # receive tcp packet w/o ip headers
+        packet_recv = self.ip_socket.receive_message(self.client_ip) # NEED MARIAH"S CODE FOR THIS
+        # create new tcp packet
+        unpack_recv = TCPPacket()
+        # use unpacket function to unpack the received tcp packet
+       # unpack_recv.unpack_received_packet(packet_recv, self.client_ip, self.server_ip)
 
             # use unpack function to unpack the received tcp packet
             unpack_recv.unpack_received_packet(packet_recv, self.server_ip, self.client_ip)
@@ -119,6 +125,9 @@ class TCP:
             else:
                 break
 
+        # see if packet is correct
+       # if unpack_recv.client_port != self.client_port and unpack_recv.server_port != self.server_port:
+       #     pass #raise err?
 
 
 
