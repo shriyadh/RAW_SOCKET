@@ -90,14 +90,15 @@ class TCP:
 
         #====================================== TEST END ===============================================
 
-        self.ip_socket.send_message(tcp_seg) # NEED MARIAH'S CODE FOR THIS
+        self.ip_socket.send_message(tcp_seg, server_ip,server_port) # NEED MARIAH'S CODE FOR THIS
 
         #  NEXT --- receive SYN ACK ------------------- HOW ARE WE HANDLING CONGESTION WINDOW??? WHAT CHECKS DO WE NEED?
 
-        # receive FROM IP TCP SEG WITHOUT IP HEADERS
-        packet_recv = self.ip_socket.receive_message() # NEED MARIAH"S CODE FOR THIS
+        # receive tcp packet w/o ip headers
+        packet_recv = self.ip_socket.receive_message(self.client_ip) # NEED MARIAH"S CODE FOR THIS
+        # create new tcp packet
         unpack_recv = TCPPacket()
-        # unpack packet
+        # use unpacket function to unpack the received tcp packet
         unpack_recv.unpack_received_packet(packet_recv, self.client_ip, self.server_ip)
 
         # see if packet is correct
