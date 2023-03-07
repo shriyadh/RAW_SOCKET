@@ -97,11 +97,13 @@ def start_download(url):
 def main():
     # testing
     # parse the cmd line to get the url download link
-    url = parse_cmd_line()
-    print(url)
+    #url = parse_cmd_line()
+   # print(url)
 
 
-    start_download(url)
+    #start_download(url)
+    test = TCP()
+    test.establish_handshake("david.choffnes.com", 80)
 
 
 

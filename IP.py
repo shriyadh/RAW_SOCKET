@@ -1,6 +1,24 @@
 import socket
 import struct
-from TCP import calculate_checksum
+
+
+# from TCP import calculate_checksum
+
+def calculate_checksum(msg):
+    s = 0
+
+    # loop taking 2 characters at a time
+    for i in range(0, len(msg), 2):
+        w = msg[i] + msg[i + 1] << 8
+        s = s + w
+
+    s = (s >> 16) + (s & 0xffff)
+    s = s + (s >> 16)
+
+    # complement and mask to 4 byte short
+    s = ~s & 0xffff
+
+    return s
 
 
 class IP:
@@ -24,7 +42,6 @@ class IP:
         return tcp_seg
 
     def send_message(self, tcp_seg, dest_ip, dest_port):
-
         # create packet
         ip_packet = IP_Packet()
 
