@@ -2,6 +2,7 @@ import socket
 import struct
 from random import randint
 
+
 # from TCP import calculate_checksum
 
 def calculate_checksum(msg):
@@ -65,7 +66,7 @@ class IP:
         packet_to_send = ip_packet.pack_ip_packet()
 
         # send to server
-        self.send_socket.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
+
         self.send_socket.sendto(packet_to_send, (self.server_ip, 80))
 
         print("******sent packet******")
@@ -105,6 +106,8 @@ class IP_Packet:
                                 self.flags + self.offset, self.time_to_live, self.protocol, self.checksum,
                                 socket.inet_aton(self.client_ip),
                                 socket.inet_aton(self.server_ip))
+
+        print("SEND HEADER", struct.unpack('!BBHHHBBH4s4s', ip_header))
 
         # return fully complete packet
         ip_packet = ip_header + self.data
@@ -147,6 +150,7 @@ class IP_Packet:
         #    pass
         # else:
         #    return flag =  # data corrupted
+
         print("PROTOCOL", self.protocol)
 
         # ====== validate correct addresses and protocol =======
