@@ -55,15 +55,16 @@ Our program design for **RECEIVING** data is also based on the same network flow
 <br>
 
 ## **FEATURES IMPLEMENTED**
-    **BOTH**
+ **BOTH**
     * Filter out incoming packets to only use the one needed <br><br>
-    **IP**
+    
+ **IP**
     * Validate the checksums of incoming packets  
     * Set the correct version, header length and total length, protocol identifier, and checksum in each outgoing packet
     * Set the source and destination IP in each outgoing packet
     * Validate IP headers, checksum from the remote server. The protocol identifier matches the contents of the encapsulated header. <br><br>
     
-    **TCP** 
+ **TCP** 
     * Verified the checksums of incoming TCP packets, and generated correct checksums for outgoing packets.
     * Selected a valid local port to send traffic on, perform the three-way handshake, and correctly handle connection teardown
     * Correctly handled sequence and acknowledgement numbers. 
