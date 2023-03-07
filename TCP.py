@@ -76,10 +76,10 @@ class TCP:
         # THREE WAY HANDSHAKE ------ set SEQ num (random) and ACK = 0
         self.sq_num = randint(0, 100000)
         self.ack_num = 0
-        # reset packet parameters
-        tcp_packet = self.get_TCP_segment()
         # send the first SYN to do the three-way handshake
-        tcp_packet.syn = 1
+        # reset packet parameters
+        tcp_packet = self.create_tcp_SYN()
+
         # pack the TCP packet
         tcp_seg = tcp_packet.pack_TCP_packet()
         print("tcp segment",tcp_seg)
@@ -101,16 +101,24 @@ class TCP:
 
         #  NEXT --- receive SYN ACK ------------------- HOW ARE WE HANDLING CONGESTION WINDOW??? WHAT CHECKS DO WE NEED?
 
-        # receive tcp packet w/o ip headers
-        packet_recv = self.ip_socket.receive_message(self.client_ip) # NEED MARIAH"S CODE FOR THIS
         # create new tcp packet
-       # unpack_recv = TCPPacket()
-        # use unpacket function to unpack the received tcp packet
-       # unpack_recv.unpack_received_packet(packet_recv, self.client_ip, self.server_ip)
+        unpack_recv = TCPPacket()
 
-        # see if packet is correct
-       # if unpack_recv.client_port != self.client_port and unpack_recv.server_port != self.server_port:
-        #    pass #raise err?
+        while True:
+            try:
+                # receive tcp packet w/o ip headers
+                packet_recv = self.ip_socket.receive_message(self.client_ip)  # NEED MARIAH"S CODE FOR THIS
+            except:
+                continue
+
+            # use unpack function to unpack the received tcp packet
+            unpack_recv.unpack_received_packet(packet_recv, self.server_ip, self.client_ip)
+            # see if packet is correct
+            if unpack_recv.client_port != self.server_port and unpack_recv.server_port != self.client_port:
+                 continue
+            else:
+                break
+
 
 
 
@@ -125,7 +133,7 @@ class TCP:
 
         ################ THREE WAY HANDSHAKE ESTABLISHED #################
 
-    def get_TCP_segment(self):
+    def create_tcp_SYN(self):
         tcp_pack = TCPPacket()
         tcp_pack.server_ip = self.server_ip
         tcp_pack.client_ip = self.client_ip
@@ -133,6 +141,7 @@ class TCP:
         tcp_pack.server_port = self.server_port
         tcp_pack.seq_num = self.sq_num
         tcp_pack.ack_num = self.ack_num
+        tcp_pack.syn = 1
         return tcp_pack
 
 
@@ -195,6 +204,8 @@ class TCPPacket:
     def unpack_received_packet(self, recv_segment, client, server):
 
         tcp_header = struct.unpack('!HHLLBBHHH', recv_segment[0:20])
+        self.client_ip = client
+        self.server_ip = server
         self.client_port = tcp_header[0]
         self.server_port = tcp_header[1]
         self.seq_num = tcp_header[2]
@@ -227,8 +238,12 @@ class TCPPacket:
         to_check = pseudo_header + recv_segment
 
         if calculate_checksum(to_check) != 0:
+            print("Error in Checksum")
             pass
             # raise error
+        else:
+            print("no error in unpacking")
+            return to_check
 
 
     # # --------------  CREATE METHOD TO SET FIELDS FOR THE TCP PACKET TO SEND
