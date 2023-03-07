@@ -37,7 +37,7 @@ class IP:
         ip_packet = IP_Packet()
 
         # unpack ip_packet and retrieve tcp part
-        tcp_seg = ip_packet.unpack_packet(received_packet, client_address)
+        tcp_seg = ip_packet.unpack_packet(received_packet, self.client_ip)
 
         return tcp_seg
 
@@ -47,6 +47,9 @@ class IP:
 
         # add tcp seg
         ip_packet.data = tcp_seg
+        ip_packet.client_ip = self.client_ip
+        ip_packet.server_ip = self.server_ip
+        print("here",self.client_ip)
 
         # pack the packet
         packet_to_send = ip_packet.pack_ip_packet()
@@ -73,16 +76,18 @@ class IP_Packet:
         self.ip_ihl_ver = (self.version << 4) + self.ihl
 
     def pack_ip_packet(self):
+        print(self.client_ip)
+        print("server:",self.server_ip)
         ip_header_wo_check = struct.pack('!BBHHHBBH4s4s', self.ip_ihl_ver, self.type_service, self.length, self.id,
-                                         self.offset, self.time_to_live, self.protocol, self.checksum, self.client_ip,
-                                         self.server_ip)
+                                         self.offset, self.time_to_live, self.protocol, self.checksum,
+                                         socket.inet_aton(self.client_ip), socket.inet_aton(self.server_ip))
         # calc checksum
         self.checksum = calculate_checksum(ip_header_wo_check)
 
         # update checksum
         ip_header = struct.pack('!BBHHHBBH4s4s', self.ip_ihl_ver, self.type_service, self.length, self.id,
-                                self.offset, self.time_to_live, self.protocol, self.checksum, self.client_ip,
-                                self.server_ip)
+                                self.offset, self.time_to_live, self.protocol, self.checksum, socket.inet_aton(self.client_ip),
+                                socket.inet_aton(self.server_ip))
 
         # return fully complete packet
         ip_packet = ip_header + self.data

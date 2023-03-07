@@ -45,7 +45,7 @@ class TCP:
         self.cwnd = 1 #max of 1000 ; set back to 1 if packet dropped
 
     def establish_handshake(self, server_ip, server_port):
-        print("here")
+        print("ESTABLISHING")
 
         # server IP address # DNS === get Server IP Address
         self.server_ip = socket.gethostbyname(server_ip)
@@ -66,6 +66,9 @@ class TCP:
         # pick up any random port number which is not reserved
         self.client_port = randint(1024, 65535)
 
+        print("client ip", self.client_ip)
+        print("client port", self.client_port)
+
         self.ip_socket.client_ip = self.client_ip
         self.ip_socket.server_ip = self.server_ip
 
@@ -78,33 +81,35 @@ class TCP:
         tcp_packet.syn = 1
         # pack the TCP packet
         tcp_seg = tcp_packet.pack_TCP_packet()
-        print(tcp_seg)
-        # pack tcp_seg into IP
+        print("tcp segment",tcp_seg)
+
+
         # -----------------------  Call ip function for building IP DATAGRAM
 
         # ======================================= TESTTT =================================================
-        self.sender_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_RAW)
-        print("err")
+        #self.sender_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_RAW)
+        #print("err")
 
-        self.sender_socket.sendto(tcp_seg, (self.server_ip, self.server_port))
-        print("err")
+        #self.sender_socket.sendto(tcp_seg, (self.server_ip, self.server_port))
+        #print("err")
 
         #====================================== TEST END ===============================================
 
+        # pack tcp segment into ip packet
         self.ip_socket.send_message(tcp_seg, server_ip,server_port) # NEED MARIAH'S CODE FOR THIS
 
         #  NEXT --- receive SYN ACK ------------------- HOW ARE WE HANDLING CONGESTION WINDOW??? WHAT CHECKS DO WE NEED?
 
         # receive tcp packet w/o ip headers
-        packet_recv = self.ip_socket.receive_message(self.client_ip) # NEED MARIAH"S CODE FOR THIS
+      #  packet_recv = self.ip_socket.receive_message(self.client_ip) # NEED MARIAH"S CODE FOR THIS
         # create new tcp packet
-        unpack_recv = TCPPacket()
+       # unpack_recv = TCPPacket()
         # use unpacket function to unpack the received tcp packet
-        unpack_recv.unpack_received_packet(packet_recv, self.client_ip, self.server_ip)
+       # unpack_recv.unpack_received_packet(packet_recv, self.client_ip, self.server_ip)
 
         # see if packet is correct
-        if unpack_recv.client_port != self.client_port and unpack_recv.server_port != self.server_port:
-            pass #raise err?
+       # if unpack_recv.client_port != self.client_port and unpack_recv.server_port != self.server_port:
+        #    pass #raise err?
 
 
 
@@ -112,10 +117,10 @@ class TCP:
 
 
         # SEND ACK
-        tcp_packet = self.get_TCP_segment()
-        tcp_packet.ack = 1
-        tcp_seg = tcp_packet.pack_TCP_packet()
-        self.ip_socket.send_message(tcp_seg)  # NEED MARIAH'S CODE FOR THIS
+        #tcp_packet = self.get_TCP_segment()
+        #tcp_packet.ack = 1
+        #tcp_seg = tcp_packet.pack_TCP_packet()
+        #self.ip_socket.send_message(tcp_seg)  # NEED MARIAH'S CODE FOR THIS
 
         ################ THREE WAY HANDSHAKE ESTABLISHED #################
 
