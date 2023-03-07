@@ -1,6 +1,6 @@
 import socket
 import struct
-
+from random import randint
 
 # from TCP import calculate_checksum
 
@@ -30,7 +30,6 @@ class IP:
         self.recv_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
         self.send_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_RAW)
 
-
     def receive_message(self, client_address):
         print("RECEIVING...")
         # receive the packet from the raw socket
@@ -55,13 +54,12 @@ class IP:
         # create packet
         ip_packet = IP_Packet()
 
-
         # add tcp seg
         ip_packet.data = tcp_seg
         ip_packet.client_ip = self.client_ip
         ip_packet.server_ip = self.server_ip
-        print("CLIENT",self.client_ip)
-        print("SERVER",self.server_ip)
+        print("CLIENT", self.client_ip)
+        print("SERVER", self.server_ip)
 
         # pack the packet
         packet_to_send = ip_packet.pack_ip_packet()
@@ -79,9 +77,10 @@ class IP_Packet:
         self.version = 4
         self.ihl = 5
         self.type_service = 0
-        self.id = 0
+        self.id = randint(1, 65535)
         self.offset = 0
         self.time_to_live = 255
+        self.flags = 0
         self.protocol = socket.IPPROTO_TCP
         self.checksum = 0
         self.client_ip = src_ip
@@ -93,8 +92,9 @@ class IP_Packet:
     def pack_ip_packet(self):
         print(self.client_ip)
         self.length = len(self.data) + 20
-        print("server:",self.server_ip)
+        print("server:", self.server_ip)
         ip_header_wo_check = struct.pack('!BBHHHBBH4s4s', self.ip_ihl_ver, self.type_service, self.length, self.id,
+                                         self.flags +
                                          self.offset, self.time_to_live, self.protocol, self.checksum,
                                          socket.inet_aton(self.client_ip), socket.inet_aton(self.server_ip))
         # calc checksum
@@ -102,13 +102,13 @@ class IP_Packet:
 
         # update checksum
         ip_header = struct.pack('!BBHHHBBH4s4s', self.ip_ihl_ver, self.type_service, self.length, self.id,
-                                self.offset, self.time_to_live, self.protocol, self.checksum, socket.inet_aton(self.client_ip),
+                                self.flags + self.offset, self.time_to_live, self.protocol, self.checksum,
+                                socket.inet_aton(self.client_ip),
                                 socket.inet_aton(self.server_ip))
 
         # return fully complete packet
-        ip_packet = ip_header_wo_check + self.data
+        ip_packet = ip_header + self.data
         print("Length", self.length)
-
 
         return ip_packet
 
@@ -118,7 +118,7 @@ class IP_Packet:
         # grab ip header from first bytes of the packet in a tuple
 
         ip_header = struct.unpack('!BBHHHBBH4s4s', received_packet[:20])
-        print("header",ip_header)
+        print("header", ip_header)
 
         # ===== parse the fields =====
         self.version = ip_header[0] >> 4  # first byte contains version and ihl
@@ -140,21 +140,20 @@ class IP_Packet:
         # set checksum to zero
         validate = struct.pack('!BBHHHBBH4s4s', self.ip_ihl_ver, self.type_service, self.length, self.id,
                                self.offset, self.time_to_live, self.protocol, 0, socket.inet_aton(self.client_ip),
-                              socket.inet_aton(self.server_ip))
+                               socket.inet_aton(self.server_ip))
         # NOT WORKING
-        #if calculate_checksum(validate) == self.checksum:  # checksum is valid
-        #print("Passed checksum")
+        # if calculate_checksum(validate) == self.checksum:  # checksum is valid
+        # print("Passed checksum")
         #    pass
-        #else:
+        # else:
         #    return flag =  # data corrupted
-        print("PROTOCOL",self.protocol)
+        print("PROTOCOL", self.protocol)
 
         # ====== validate correct addresses and protocol =======
         if self.client_ip == client_address:
-            if self.server_ip == server_address:
-                if self.protocol == 6:
-                    flag = True # wrong address'
-
+            # if self.server_ip == server_address:
+            if self.protocol == 6:
+                flag = True  # wrong address'
 
         print("end of unpacking ip")
 
