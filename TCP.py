@@ -71,6 +71,7 @@ class TCP:
 
         self.ip_socket.client_ip = self.client_ip
         self.ip_socket.server_ip = self.server_ip
+        self.ip_socket.client_port = self.client_port
 
         # THREE WAY HANDSHAKE ------ set SEQ num (random) and ACK = 0
         self.sq_num = randint(0, 100000)
@@ -101,7 +102,7 @@ class TCP:
         #  NEXT --- receive SYN ACK ------------------- HOW ARE WE HANDLING CONGESTION WINDOW??? WHAT CHECKS DO WE NEED?
 
         # receive tcp packet w/o ip headers
-      #  packet_recv = self.ip_socket.receive_message(self.client_ip) # NEED MARIAH"S CODE FOR THIS
+        packet_recv = self.ip_socket.receive_message(self.client_ip) # NEED MARIAH"S CODE FOR THIS
         # create new tcp packet
        # unpack_recv = TCPPacket()
         # use unpacket function to unpack the received tcp packet

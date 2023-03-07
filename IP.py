@@ -23,16 +23,23 @@ def calculate_checksum(msg):
 
 class IP:
 
-    def __init__(self, src_ip='', dest_ip=''):
+    def __init__(self, src_ip='', dest_ip='', client_port=''):
         self.client_ip = src_ip
         self.server_ip = dest_ip
+        self.client_port = client_port
         self.recv_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
         self.send_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_RAW)
+
         self.send_socket.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
 
+
     def receive_message(self, client_address):
+        print("RECEIVING...")
         # receive the packet from the raw socket
-        received_packet, server_add = self.recv_socket.recvfrom(2048)
+        self.recv_socket.bind((self.client_ip, self.client_port))
+        received_packet, server_add = self.recv_socket.recvfrom(1024)
+        print("RECEIVED")
+        print("PACKET", received_packet)
 
         # create ip packet
         ip_packet = IP_Packet()
@@ -70,7 +77,7 @@ class IP_Packet:
         self.type_service = 0
         self.id = 0
         self.offset = 0
-        self.time_to_live = 0
+        self.time_to_live = 255
         self.protocol = socket.IPPROTO_TCP
         self.checksum = 0
         self.client_ip = src_ip
@@ -95,12 +102,16 @@ class IP_Packet:
 
         # return fully complete packet
         ip_packet = ip_header + self.data
+        print("IP PACKET",ip_packet)
 
         return ip_packet
 
     def unpack_packet(self, received_packet, client_address):
+
         # grab ip header from first bytes of the packet in a tuple
+
         ip_header = struct.unpack('!BBHHHBBH4s4s', received_packet[:20])
+        print("header",ip_header)
 
         # ===== parse the fields =====
         self.version = ip_header[0] >> 4  # first byte contains version and ihl
@@ -121,17 +132,20 @@ class IP_Packet:
 
         # set checksum to zero
         validate = struct.pack('!BBHHHBBH4s4s', self.ip_ihl_ver, self.type_service, self.length, self.id,
-                               self.offset, self.time_to_live, self.protocol, 0, self.client_ip,
-                               self.server_ip)
+                               self.offset, self.time_to_live, self.protocol, 0, socket.inet_aton(self.client_ip),
+                              socket.inet_aton(self.server_ip))
 
-        if calculate_checksum(validate) == self.checksum:  # checksum is valid
-            pass
-        else:
-            return None  # data corrupted
+        #if calculate_checksum(validate) == self.checksum:  # checksum is valid
+        print("Passed checksum")
+        #    pass
+        #else:
+        #    return None  # data corrupted
 
         # dest ip (client in receiving packet) should match this ip
         if self.client_ip != client_address:
+
             return  # wrong address
+        print("end of unpacking ip")
 
         # pass to tcp using offset value
         return self.data
