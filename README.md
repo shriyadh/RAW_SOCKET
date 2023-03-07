@@ -66,15 +66,15 @@ Our program design for **RECEIVING** data is also based on the same network flow
 * Validate IP headers, checksum from the remote server. The protocol identifier matches the contents of the encapsulated header. <br><br>
     
  **TCP** <br>
-    * Verified the checksums of incoming TCP packets, and generated correct checksums for outgoing packets.
-    * Selected a valid local port to send traffic on, perform the three-way handshake, and correctly handle connection teardown
-    * Correctly handled sequence and acknowledgement numbers. 
-    * Managed the advertised window as fit. 
-    * Implemented basic timeout functionality: if a packet is not ACKed within 1 minute, assume the packet is lost and retransmit it. 
-    * Able to receive out-of-order incoming packets and put them back into the correct order before delivering them to the higher-level, 
-    * HTTP handling code. ???????????? 
-    * Identifieddentify and discarded duplicate packets. 
-    * Implemented a basic congestion window: start with cwnd=1, and increment the cwnd after each succesful ACK, up to a fixed maximum of 1000 (e.g. cwnd must be             <=1000 at all times). If program observes a packet drop or a timeout, reset the cwnd to 1.  <br><br>
+* Verified the checksums of incoming TCP packets, and generated correct checksums for outgoing packets
+* Selected a valid local port to send traffic on, perform the three-way handshake, and correctly handle connection teardown
+* Correctly handled sequence and acknowledgement numbers. 
+* Managed the advertised window as fit. 
+* Implemented basic timeout functionality: if a packet is not ACKed within 1 minute, assume the packet is lost and retransmit it. 
+* Able to receive out-of-order incoming packets and put them back into the correct order before delivering them to the higher-level, 
+* HTTP handling code. ???????????? 
+* Identifieddentify and discarded duplicate packets. 
+* Implemented a basic congestion window: start with cwnd=1, and increment the cwnd after each succesful ACK, up to a fixed maximum of 1000 (e.g. cwnd must be             <=1000 at all times). If program observes a packet drop or a timeout, reset the cwnd to 1.  <br><br>
     
 
 
