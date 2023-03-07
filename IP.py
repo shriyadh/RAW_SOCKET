@@ -28,6 +28,7 @@ class IP:
         self.server_ip = dest_ip
         self.recv_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
         self.send_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_RAW)
+        self.send_socket.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
 
     def receive_message(self, client_address):
         # receive the packet from the raw socket
@@ -41,7 +42,7 @@ class IP:
 
         return tcp_seg
 
-    def send_message(self, tcp_seg, dest_ip, dest_port):
+    def send_message(self, tcp_seg):
         # create packet
         ip_packet = IP_Packet()
 
@@ -49,13 +50,16 @@ class IP:
         ip_packet.data = tcp_seg
         ip_packet.client_ip = self.client_ip
         ip_packet.server_ip = self.server_ip
-        print("here",self.client_ip)
+        print("CLIENT",self.client_ip)
+        print("SERVER",self.server_ip)
 
         # pack the packet
         packet_to_send = ip_packet.pack_ip_packet()
 
         # send to server
-        self.send_socket.sendto(packet_to_send, (dest_ip, dest_port))
+        self.send_socket.sendto(packet_to_send, (self.server_ip, 80))
+
+        print("******sent packet******")
 
 
 class IP_Packet:

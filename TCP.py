@@ -45,7 +45,7 @@ class TCP:
         self.cwnd = 1 #max of 1000 ; set back to 1 if packet dropped
 
     def establish_handshake(self, server_ip, server_port):
-        print("ESTABLISHING")
+        print("*****ESTABLISHING handshake****")
 
         # server IP address # DNS === get Server IP Address
         self.server_ip = socket.gethostbyname(server_ip)
@@ -96,7 +96,7 @@ class TCP:
         #====================================== TEST END ===============================================
 
         # pack tcp segment into ip packet
-        self.ip_socket.send_message(tcp_seg, server_ip,server_port) # NEED MARIAH'S CODE FOR THIS
+        self.ip_socket.send_message(tcp_seg) # NEED MARIAH'S CODE FOR THIS
 
         #  NEXT --- receive SYN ACK ------------------- HOW ARE WE HANDLING CONGESTION WINDOW??? WHAT CHECKS DO WE NEED?
 
@@ -158,7 +158,7 @@ class TCPPacket:
         self.data = data
 
     def pack_TCP_packet(self):
-        print(self.client_port, self.server_port)
+        # print(self.client_port, self.server_port)
         tcp_offset_res = (self.offset << 4) + 0
         tcp_flags = self.fin + (self.syn << 1) + (self.rst << 2) + (self.psh << 3) + (self.ack << 4) + (self.urg << 5)
 
@@ -177,7 +177,7 @@ class TCPPacket:
         final_header = pseudo_header + tcp_header_without_checksum + self.data
 
         self.checksum = calculate_checksum(final_header)
-        print(self.checksum)
+        # print(self.checksum)
 
         # tcp header with checksum
         tcp_with_checksum = struct.pack('!HHLLBBHHH', self.client_port, self.server_port, self.seq_num, self.ack_num,
@@ -187,7 +187,7 @@ class TCPPacket:
 
         # final tcp packet --- header with checksum + data [[[[[[ TCP HEADER + DATA ]]]]]]]]]]]] = TCP SEGMENT
         tcp_segment = tcp_with_checksum + self.data
-        print(tcp_segment)
+        # print(tcp_segment)
 
         return tcp_segment
 
