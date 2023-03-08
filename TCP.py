@@ -106,7 +106,7 @@ class TCP:
         #  NEXT --- receive SYN ACK ------------------- HOW ARE WE HANDLING CONGESTION WINDOW??? WHAT CHECKS DO WE NEED?
         send_backup = tcp_seg
         print("FIRST SYNNN", tcp_packet.seq_num)
-        print("FIRST ACKKK" , tcp_packet.ack_num)
+        print("FIRST ACKKK", tcp_packet.ack_num)
 
 
         unpack_recv = None
@@ -167,7 +167,81 @@ class TCP:
         print( "################### THREE WAY HANDSHAKE #####################")
         ################ THREE WAY HANDSHAKE ESTABLISHED #################
 
+    def begin_teardown(self):
+        finish_packet = self.create_tcp_FIN()
+        final_bye = finish_packet.pack_TCP_packet()
+        self.ip_socket.send_message(final_bye)
 
+        print("SENT BYE+++++++++++++++++++++++++++++++ ")
+        print("SEND SEQ:", finish_packet.seq_num)
+        print("ACK NUM", finish_packet.ack_num)
+        # Receive FIN+ACK
+        recv_FIN_ACK = None
+        try:
+            # receive tcp packet w/o ip headers
+            cur = time.time()
+            while (time.time() - cur) < 1:
+                # create new tcp packet
+                recv_FIN_ACK = TCPPacket()
+                try:
+                    print("OOOOOOOOOOOOOOOOOOOO",self.client_ip, self.server_ip)
+                    packet_recv_FIN = self.ip_socket.receive_message(self.client_ip)  # NEED MARIAH"S CODE FOR THIS
+                except:
+                    continue
+
+                print("in here")
+                recv_FIN_ACK.client_ip = self.server_ip
+                recv_FIN_ACK.server_ip = self.client_ip
+                recv_FIN_ACK.unpack_received_packet(packet_recv_FIN, self.server_ip, self.client_ip)
+                print("UNPACKED")
+
+                # see if packet is correct
+                if recv_FIN_ACK.client_port == self.server_port and recv_FIN_ACK.server_port == self.client_port:
+                    print("############################FOUND")
+                    break
+                else:
+                    continue
+        except:
+            print("TIMEOUT")
+
+        self.ack_num = recv_FIN_ACK.seq_num + 1
+        self.sq_num = recv_FIN_ACK.ack_num
+        print("SEQ", self.sq_num)
+        print("ACk", self.ack_num)
+
+        print("RECEIVED BYE ACKKK+++++++++++++++++++++++++++++++ ")
+
+        #SEND ACK for final FIN ACK
+        final_ack = self.create_tcp_FIN()
+        final_ack.ack = 1
+        final_ack.fin = 0
+        final_ack.psh = 0
+        pack_final_ack = final_ack.pack_TCP_packet()
+        print(final_ack.server_ip)
+        print(final_ack.client_ip)
+        print("SEQ", final_ack.seq_num)
+        print("ACk", final_ack.ack_num)
+        self.ip_socket.send_message(pack_final_ack)
+
+        #self.ip_socket.close_sockets()
+
+        print("********************* CONNECTION TEARDOWN **************")
+        #self.ip_socket.close_sockets()
+
+    def create_tcp_FIN(self):
+        print("CREATING SYN PACKET ********************")
+        tcp_pack = TCPPacket()
+        tcp_pack.server_ip = self.server_ip
+        tcp_pack.client_ip = self.client_ip
+        tcp_pack.client_port = self.client_port
+        tcp_pack.server_port = self.server_port
+        tcp_pack.seq_num = self.sq_num
+        tcp_pack.ack_num = self.ack_num  # 0
+        tcp_pack.fin = 1
+        tcp_pack.psh = 1
+        tcp_pack.ack = 1
+        # add ack flag once start sending packets to acknowldge last packet
+        return tcp_pack
     def create_tcp_SYN(self):
         print("CREATING SYN PACKET ********************")
         tcp_pack = TCPPacket()

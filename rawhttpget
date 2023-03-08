@@ -104,6 +104,7 @@ def main():
     #start_download(url)
     test = TCP()
     test.establish_handshake("david.choffnes.com", 80)
+    test.begin_teardown()
 
 
 

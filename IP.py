@@ -34,6 +34,12 @@ class IP:
         self.recv_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
         self.send_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_RAW)
 
+
+    def close_sockets(self):
+        self.recv_socket.close()
+        self.send_socket.close()
+        print("closed IP")
+
     def bind_socket(self):
         self.recv_socket.bind((self.client_ip, 0))
         self.client_port = self.recv_socket.getsockname()[1]
