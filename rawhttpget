@@ -103,7 +103,7 @@ def main():
 
     #start_download(url)
     test = TCP()
-    test.establish_handshake("project2.5700.network", 80)
+    test.establish_handshake("david.choffnes.com", 80)
 
 
 

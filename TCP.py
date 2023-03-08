@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
+import fcntl
 import socket
 import struct
+import time
 from random import randint
 
 from IP import IP
 
 
-def calculate_checksum(msg=b''):
+def calculate_checksum(msg):
     """
     :param msg: Takes in the message data
     :return: checksum
@@ -16,7 +18,7 @@ def calculate_checksum(msg=b''):
 
     # if len of msg is odd
     if len(msg) % 2 != 0:
-        msg += struct.pack('B', 0)
+        msg += b'\0'
 
     # loop taking 2 characters at a time
     for i in range(0, len(msg), 2):
@@ -35,27 +37,34 @@ def calculate_checksum(msg=b''):
 class TCP:
 
     def __init__(self):
+        print("In Constructor for TCP")
         self.client_ip = ''
-        self.client_port = 0
+        self.client_port = -999
         self.server_ip = ''
-        self.server_port = 0
+        self.server_port = -999
         self.sq_num = 0
         self.ack_num = 0
         self.ip_socket = IP()
         self.cwnd = 1 #max of 1000 ; set back to 1 if packet dropped
 
     def establish_handshake(self, server_ip, server_port):
-        print("*****ESTABLISHING handshake****")
+        print("\n\n*****ESTABLISHING handshake****\n\n")
+
 
         # server IP address # DNS === get Server IP Address
         self.server_ip = socket.gethostbyname(server_ip)
+        print("SERVER IP IS___ "+ self.server_ip)
         # server port is 80 (web)
         self.server_port = server_port
+        print("SERVER PORT IS___ ", self.server_port)
+
         # get local ip address
-        sock = socket.socket()
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
         try:
-            sock.connect(("www.google.com", 80))
+            sock.connect(("david.choffnes.com", 80))
             ip, port = sock.getsockname()
+            print("))IP*****************************************", ip)
 
         except Exception as err:
             raise err
@@ -63,18 +72,24 @@ class TCP:
             sock.close()
 
         self.client_ip = ip
-        # pick up any random port number which is not reserved
-        self.client_port = randint(1024, 65535)
+        print("CLIENT IP IS___ "+ self.client_ip)
 
-        print("client ip", self.client_ip)
-        print("client port", self.client_port)
+        # pick up any random port number which is not reserved
+        self.client_port = randint(1024, 65535)#self.ip_socket.bind_socket()
+        #self.ip_socket.recv_socket.bind((self.client_ip,0))
+        #self.client_port = self.ip_socket.recv_socket.getsockname()[1]
+        #print("CLIENT PORT IS___ ", self.client_port)
+
+
 
         self.ip_socket.client_ip = self.client_ip
         self.ip_socket.server_ip = self.server_ip
-        self.ip_socket.client_port = self.client_port
+        print("*******************************", self.ip_socket.client_ip)
+        # self.ip_socket.client_port = self.client_port
 
         # THREE WAY HANDSHAKE ------ set SEQ num (random) and ACK = 0
-        self.sq_num = randint(0, 100000)
+        self.sq_num = randint(1, 65535)
+        print("SEQUENCE NUMBER ", self.sq_num)
         self.ack_num = 0
         # send the first SYN to do the three-way handshake
         # reset packet parameters
@@ -87,49 +102,44 @@ class TCP:
 
         # -----------------------  Call ip function for building IP DATAGRAM
 
-        # ======================================= TESTTT =================================================
-        #self.sender_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_RAW)
-        #print("err")
-
-        #self.sender_socket.sendto(tcp_seg, (self.server_ip, self.server_port))
-        #print("err")
-
-        #====================================== TEST END ===============================================
-
-        # pack tcp segment into ip packet
+               # pack tcp segment into ip packet
+        print(tcp_packet.seq_num, "***************")
         self.ip_socket.send_message(tcp_seg) # NEED MARIAH'S CODE FOR THIS
 
         #  NEXT --- receive SYN ACK ------------------- HOW ARE WE HANDLING CONGESTION WINDOW??? WHAT CHECKS DO WE NEED?
-
-        # create new tcp packet
-        unpack_recv = TCPPacket()
-
-        while True:
-            try:
-                # receive tcp packet w/o ip headers
-                packet_recv = self.ip_socket.receive_message(self.client_ip)  # NEED MARIAH"S CODE FOR THIS
-            except:
-                continue
-
-            # use unpack function to unpack the received tcp packet
-            unpack_recv.client_ip = self.server_ip
-            unpack_recv.server_ip = self.client_ip
-            unpack_recv.unpack_received_packet(packet_recv, self.server_ip, self.client_ip)
-            # see if packet is correct
-            if unpack_recv.client_port != self.server_port and unpack_recv.server_port != self.client_port:
-                continue
-            else:
-                break
-
-        # see if packet is correct
-       # if unpack_recv.client_port != self.client_port and unpack_recv.server_port != self.server_port:
-       #     pass #raise err?
+        send_backup = tcp_seg
 
 
 
+        try:
+            # receive tcp packet w/o ip headers
+            cur = time.time()
+            while(time.time() - cur) < 1:
+                # create new tcp packet
+                unpack_recv = TCPPacket()
+                try:
+                    packet_recv = self.ip_socket.receive_message(self.client_ip)  # NEED MARIAH"S CODE FOR THIS
+                except:
+                    continue
+
+                unpack_recv.client_ip = self.server_ip
+                unpack_recv.server_ip = self.client_ip
+                unpack_recv.unpack_received_packet(packet_recv, self.server_ip, self.client_ip)
+                # see if packet is correct
+                if unpack_recv.client_port == self.server_port and unpack_recv.server_port == self.client_port:
+                    break
+                else:
+                    continue
+
+        except:
+            self.cwnd -=1
+            self.ip_socket.send_message(send_backup)  # NEED MARIAH'S CODE FOR THIS
+
+        # use unpack function to unpack the received tcp packet
 
 
 
+        print("RECEIVED %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
         # SEND ACK
         #tcp_packet = self.get_TCP_segment()
         #tcp_packet.ack = 1
@@ -139,13 +149,14 @@ class TCP:
         ################ THREE WAY HANDSHAKE ESTABLISHED #################
 
     def create_tcp_SYN(self):
+        print("CREATING SYN PACKET ********************")
         tcp_pack = TCPPacket()
         tcp_pack.server_ip = self.server_ip
         tcp_pack.client_ip = self.client_ip
         tcp_pack.client_port = self.client_port
         tcp_pack.server_port = self.server_port
         tcp_pack.seq_num = self.sq_num
-        tcp_pack.ack_num = self.ack_num
+        tcp_pack.ack_num = self.ack_num # 0
         tcp_pack.syn = 1
         return tcp_pack
 
@@ -174,16 +185,26 @@ class TCPPacket:
 
     def pack_TCP_packet(self):
         # print(self.client_port, self.server_port)
+
         tcp_offset_res = (self.offset << 4) + 0
         tcp_flags = self.fin + (self.syn << 1) + (self.rst << 2) + (self.psh << 3) + (self.ack << 4) + (self.urg << 5)
 
+        mss_option = struct.pack('!HH', 2, 1460)
+        nop_option = b"\x01\x01"
+        sack_perm_option = b"\x04\x02\x00\x00"
+        options = mss_option + nop_option + sack_perm_option
         tcp_header_without_checksum = struct.pack('!HHLLBBHHH', self.client_port, self.server_port, self.seq_num,
                                                   self.ack_num, tcp_offset_res, tcp_flags,
                                                   self.wnd_size,
                                                   self.checksum, self.urg_ptr)
 
+        #self.options = b'\x02\x04\x05\xb4\x01\x01\x04\x02'
+
+        tcp_header_without_checksum += options
+
         # pseudo header fields from IP header -- should have source IP, Destination IP, Protocol field
         #  TCP length, TCP header ===== needed for calculating checksum accurately
+
         tcp_len = len(self.data) + (self.offset * 4)
 
         pseudo_header = struct.pack('!4s4sBBH', socket.inet_aton(self.client_ip), socket.inet_aton(self.server_ip),
@@ -199,6 +220,10 @@ class TCPPacket:
                                         tcp_offset_res, tcp_flags,
                                         self.wnd_size, self.checksum, self.urg_ptr)
 
+        print("TCP HEADER  2", self.client_port, self.server_port, self.seq_num,
+              self.ack_num, tcp_offset_res, tcp_flags,
+              self.wnd_size,
+              self.checksum, self.urg_ptr)
 
         # final tcp packet --- header with checksum + data [[[[[[ TCP HEADER + DATA ]]]]]]]]]]]] = TCP SEGMENT
         tcp_segment = tcp_with_checksum + self.data
