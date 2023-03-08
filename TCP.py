@@ -84,12 +84,10 @@ class TCP:
 
         self.ip_socket.client_ip = self.client_ip
         self.ip_socket.server_ip = self.server_ip
-        print("*******************************", self.ip_socket.client_ip)
         # self.ip_socket.client_port = self.client_port
 
         # THREE WAY HANDSHAKE ------ set SEQ num (random) and ACK = 0
         self.sq_num = randint(1, 65535)
-        print("SEQUENCE NUMBER ", self.sq_num)
         self.ack_num = 0
         # send the first SYN to do the three-way handshake
         # reset packet parameters
@@ -97,19 +95,21 @@ class TCP:
 
         # pack the TCP packet
         tcp_seg = tcp_packet.pack_TCP_packet()
-        print("tcp segment",tcp_seg)
+
 
 
         # -----------------------  Call ip function for building IP DATAGRAM
 
                # pack tcp segment into ip packet
-        print(tcp_packet.seq_num, "***************")
         self.ip_socket.send_message(tcp_seg) # NEED MARIAH'S CODE FOR THIS
 
         #  NEXT --- receive SYN ACK ------------------- HOW ARE WE HANDLING CONGESTION WINDOW??? WHAT CHECKS DO WE NEED?
         send_backup = tcp_seg
+        print("FIRST SYNNN", tcp_packet.seq_num)
+        print("FIRST ACKKK" , tcp_packet.ack_num)
 
 
+        unpack_recv = None
 
         try:
             # receive tcp packet w/o ip headers
@@ -122,11 +122,15 @@ class TCP:
                 except:
                     continue
 
+                print("in here")
                 unpack_recv.client_ip = self.server_ip
                 unpack_recv.server_ip = self.client_ip
                 unpack_recv.unpack_received_packet(packet_recv, self.server_ip, self.client_ip)
+                print("UNPACKED")
+
                 # see if packet is correct
                 if unpack_recv.client_port == self.server_port and unpack_recv.server_port == self.client_port:
+                    print("############################FOUND")
                     break
                 else:
                     continue
@@ -135,18 +139,34 @@ class TCP:
             self.cwnd -=1
             self.ip_socket.send_message(send_backup)  # NEED MARIAH'S CODE FOR THIS
 
-        # use unpack function to unpack the received tcp packet
+        if unpack_recv.ack_num == self.sq_num + 1 and unpack_recv.syn == 1 and unpack_recv.ack == 1:
+            self.ack_num = unpack_recv.seq_num + 1
+            self.sq_num = unpack_recv.ack_num
+            print("RECEIVED ACK: ", unpack_recv.seq_num)
+            print("RECEIVED SEQ --->> REPLY BACK W THIS", unpack_recv.ack_num)
+            if self.cwnd + 1 >= 1000:
+                self.cwnd = 1000
+            else:
+                self.cwnd += 1
+        else:
+            self.cwnd -= 1
+            self.ip_socket.send_message(send_backup)  # SEND AGAIN
 
 
 
+                # use unpack function to unpack the received tcp packet
         print("RECEIVED %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-        # SEND ACK
-        #tcp_packet = self.get_TCP_segment()
-        #tcp_packet.ack = 1
-        #tcp_seg = tcp_packet.pack_TCP_packet()
-        #self.ip_socket.send_message(tcp_seg)  # NEED MARIAH'S CODE FOR THIS
 
+
+        # SEND ACK
+        tcp_packet = self.create_tcp_ACK()
+        tcp_seg = tcp_packet.pack_TCP_packet()
+        self.ip_socket.send_message(tcp_seg)  # NEED MARIAH'S CODE FOR THIS
+        print("SECOND SEQQQQ", tcp_packet.seq_num)
+        print("SECOND ACKKKK", tcp_packet.ack_num)
+        print( "################### THREE WAY HANDSHAKE #####################")
         ################ THREE WAY HANDSHAKE ESTABLISHED #################
+
 
     def create_tcp_SYN(self):
         print("CREATING SYN PACKET ********************")
@@ -158,6 +178,18 @@ class TCP:
         tcp_pack.seq_num = self.sq_num
         tcp_pack.ack_num = self.ack_num # 0
         tcp_pack.syn = 1
+        return tcp_pack
+
+    def create_tcp_ACK(self):
+        print("CREATING ACK PACKET ********************")
+        tcp_pack = TCPPacket()
+        tcp_pack.server_ip = self.server_ip
+        tcp_pack.client_ip = self.client_ip
+        tcp_pack.client_port = self.client_port
+        tcp_pack.server_port = self.server_port
+        tcp_pack.seq_num = self.sq_num
+        tcp_pack.ack_num = self.ack_num # 0
+        tcp_pack.ack = 1
         return tcp_pack
 
 
@@ -189,18 +221,17 @@ class TCPPacket:
         tcp_offset_res = (self.offset << 4) + 0
         tcp_flags = self.fin + (self.syn << 1) + (self.rst << 2) + (self.psh << 3) + (self.ack << 4) + (self.urg << 5)
 
-        mss_option = struct.pack('!HH', 2, 1460)
-        nop_option = b"\x01\x01"
-        sack_perm_option = b"\x04\x02\x00\x00"
-        options = mss_option + nop_option + sack_perm_option
-        tcp_header_without_checksum = struct.pack('!HHLLBBHHH', self.client_port, self.server_port, self.seq_num,
+       # mss_option = struct.pack('!HH', 2, 1460)
+       # nop_option = b"\x01\x01"
+       # sack_perm_option = b"\x04\x02\x00\x00"
+        #options = mss_option + nop_option + sack_perm_option
+        tcp_header_without_checksum = struct.pack('!HHLLBBH', self.client_port, self.server_port, self.seq_num,
                                                   self.ack_num, tcp_offset_res, tcp_flags,
-                                                  self.wnd_size,
-                                                  self.checksum, self.urg_ptr)
+                                                  self.wnd_size) + struct.pack('H', self.checksum) + struct.pack('!H', self.urg_ptr)
 
         #self.options = b'\x02\x04\x05\xb4\x01\x01\x04\x02'
 
-        tcp_header_without_checksum += options
+        #tcp_header_without_checksum += options
 
         # pseudo header fields from IP header -- should have source IP, Destination IP, Protocol field
         #  TCP length, TCP header ===== needed for calculating checksum accurately
@@ -216,14 +247,11 @@ class TCPPacket:
         # print(self.checksum)
 
         # tcp header with checksum
-        tcp_with_checksum = struct.pack('!HHLLBBHHH', self.client_port, self.server_port, self.seq_num, self.ack_num,
-                                        tcp_offset_res, tcp_flags,
-                                        self.wnd_size, self.checksum, self.urg_ptr)
+        tcp_with_checksum = struct.pack('!HHLLBBH', self.client_port, self.server_port, self.seq_num,
+                                                  self.ack_num, tcp_offset_res, tcp_flags,
+                                                  self.wnd_size) + struct.pack('H', self.checksum)\
+                            + struct.pack('!H', self.urg_ptr)
 
-        print("TCP HEADER  2", self.client_port, self.server_port, self.seq_num,
-              self.ack_num, tcp_offset_res, tcp_flags,
-              self.wnd_size,
-              self.checksum, self.urg_ptr)
 
         # final tcp packet --- header with checksum + data [[[[[[ TCP HEADER + DATA ]]]]]]]]]]]] = TCP SEGMENT
         tcp_segment = tcp_with_checksum + self.data
@@ -232,8 +260,10 @@ class TCPPacket:
         return tcp_segment
 
     def unpack_received_packet(self, recv_segment, client, server):
-
-        tcp_header = struct.unpack('!HHLLBBHHH', recv_segment[0:20])
+        print("UNPACKING TCP%%%%%%%%%%%%%%%%%%%%%")
+        print(recv_segment)
+        tcp_header = struct.unpack('!HHLLBBH', recv_segment[0:16])
+        print("LMAOOOOOO")
         self.client_ip = client
         self.server_ip = server
         self.client_port = tcp_header[0]
@@ -244,9 +274,10 @@ class TCPPacket:
         self.offset = (offset >> 4) * 4
         flags = tcp_header[5]
         self.wnd_size = tcp_header[6]
-        self.checksum = tcp_header[7]
-        self.urg = tcp_header[8]
+        self.checksum = struct.unpack('H', recv_segment[16:18])
+        self.urg = struct.unpack('!H', recv_segment[18:20])
         self.data = recv_segment[self.offset * 4:]
+        print("LMAOOOOOO")
 
         # flags in segment
         self.fin = flags & 0x01
@@ -266,7 +297,7 @@ class TCPPacket:
                                     0, socket.IPPROTO_TCP, tcp_len)
 
         to_check = pseudo_header + recv_segment
-
+        print("********")
         if calculate_checksum(to_check) != 0:
             print("Error in Checksum")
             pass
