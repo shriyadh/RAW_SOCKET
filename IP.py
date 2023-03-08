@@ -2,7 +2,6 @@ import socket
 import struct
 from random import randint
 
-
 # from TCP import calculate_checksum
 
 def calculate_checksum(msg):
@@ -28,7 +27,7 @@ def calculate_checksum(msg):
 
 class IP:
 
-    def __init__(self, src_ip='', dest_ip='', client_port=-9):
+    def __init__(self, src_ip='', dest_ip='', client_port=''):
         self.client_ip = src_ip
         self.server_ip = dest_ip
         self.client_port = client_port
@@ -96,7 +95,7 @@ class IP_Packet:
         self.version = 4
         self.ihl = 5
         self.type_service = 0
-        self.id = 0
+        self.id = randint(1, 65535)
         self.offset = 0
         self.df = 1
         self.mf = 0
@@ -127,6 +126,8 @@ class IP_Packet:
                                 self.offset, self.time_to_live, self.protocol, self.checksum,
                                 socket.inet_aton(self.client_ip),
                                 socket.inet_aton(self.server_ip))
+
+        print("SEND HEADER", struct.unpack('!BBHHHBBH4s4s', ip_header))
 
         print(ip_header)
         # return fully complete packet
@@ -180,5 +181,13 @@ class IP_Packet:
 
         print("end")
 
+        # ====== validate correct addresses and protocol =======
+        if self.client_ip == client_address:
+            # if self.server_ip == server_address:
+            if self.protocol == 6:
+                flag = True  # wrong address'
 
+        print("end of unpacking ip")
 
+        # pass to tcp using offset value
+        return self.data, flag
