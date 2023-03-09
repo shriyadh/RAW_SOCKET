@@ -2,6 +2,7 @@
 import fcntl
 import socket
 import struct
+import sys
 import time
 from random import randint
 
@@ -104,7 +105,7 @@ class TCP:
         self.ip_socket.send_message(tcp_seg) # NEED MARIAH'S CODE FOR THIS
 
         #  NEXT --- receive SYN ACK ------------------- HOW ARE WE HANDLING CONGESTION WINDOW??? WHAT CHECKS DO WE NEED?
-        send_backup = tcp_seg
+        #send_backup = tcp_seg
         print("FIRST SYNNN", tcp_packet.seq_num)
         print("FIRST ACKKK", tcp_packet.ack_num)
 
@@ -136,6 +137,7 @@ class TCP:
                     continue
 
         except:
+            print("EXCEPTION")
             self.cwnd -=1
             self.ip_socket.send_message(send_backup)  # NEED MARIAH'S CODE FOR THIS
 
@@ -166,6 +168,7 @@ class TCP:
         print("SECOND ACKKKK", tcp_packet.ack_num)
         print( "################### THREE WAY HANDSHAKE #####################")
         ################ THREE WAY HANDSHAKE ESTABLISHED #################
+
 
     def begin_teardown(self):
         finish_packet = self.create_tcp_FIN()
@@ -228,6 +231,7 @@ class TCP:
         print("********************* CONNECTION TEARDOWN **************")
         #self.ip_socket.close_sockets()
 
+
     def create_tcp_FIN(self):
         print("CREATING SYN PACKET ********************")
         tcp_pack = TCPPacket()
@@ -265,6 +269,36 @@ class TCP:
         tcp_pack.ack_num = self.ack_num # 0
         tcp_pack.ack = 1
         return tcp_pack
+
+    def create_tcp_PSH(self, data):
+        print("creating psh packet")
+        tcp_pack = TCPPacket()
+        tcp_pack.server_ip = self.server_ip
+        tcp_pack.client_ip = self.client_ip
+        tcp_pack.client_port = self.client_port
+        tcp_pack.server_port = self.server_port
+        tcp_pack.seq_num = self.sq_num
+        tcp_pack.ack_num = self.ack_num  # 0
+        tcp_pack.psh = 1
+        tcp_pack.ack = 1
+        tcp_pack.data = data.encode()
+        return tcp_pack
+    def http_req(self):
+
+        req = 'GET / HTTP/1.1\r\nHost: david.choffnes.com\r\n' \
+              'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n' \
+              'Accept-Language: en-US,en;q=0.5\r\n' \
+              'Accept-Encoding: gzip, deflate\r\n' \
+              'Connection: close\r\n' \
+              'Upgrade-Insecure-Requests: 1\r\n' \
+              'Cache-Control: max-age=0\r\n\r\n'
+
+       # seg_size = 1460
+
+        # create http packet
+        h_packet = self.create_tcp_PSH(req)
+        h_seg = h_packet.pack_TCP_packet()
+        self.ip_socket.send_message(h_seg)
 
 
 class TCPPacket:
