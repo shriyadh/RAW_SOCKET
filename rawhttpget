@@ -103,8 +103,8 @@ def main():
 
     #start_download(url)
     test = TCP()
-    test.establish_handshake("david.choffnes.com", 80)
-    test.http_req()
+    test.establish_handshake("http://david.choffnes.com", 80)
+    test.send_http_req()
     #test.begin_teardown()
 
 
