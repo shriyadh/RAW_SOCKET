@@ -303,19 +303,21 @@ class TCP:
 
     def send_http_req(self):
 
-        req = f'GET {self.file_path} HTTP/1.1\r\nHost: david.choffnes.com\r\n' \
+        req = f'GET {self.file_path}HTTP/1.1\r\nHost: david.choffnes.com\r\n' \
               'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n' \
               'Accept-Language: en-US,en;q=0.5\r\n' \
               'Accept-Encoding: gzip, deflate\r\n' \
-              'Connection: close\r\n' \
+              'Connection: keep-alive\r\n' \
               'Upgrade-Insecure-Requests: 1\r\n' \
               'Cache-Control: max-age=0\r\n\r\n'
+        print(req)
 
         # seg_size = 1460
 
         # create http packet
         h_packet = self.create_tcp_PSH(req)
         h_seg = h_packet.pack_TCP_packet()
+        print("#################################",h_seg)
         self.ip_socket.send_message(h_seg)
 
     def receive_http(self):
@@ -384,7 +386,7 @@ class TCP:
         # need to find the content-length header field
         # if length of file is equal to content length, file is done and set complete to true
 
-        with open(self.file_name, "ab") as output:
+        with open(self.file_name, "wb") as output:
             print("DATTTTTTTAAAAAAAAAAAAA",data)
             output.write(data)
             complete = True
