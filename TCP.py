@@ -49,10 +49,17 @@ class TCP:
         self.ip_socket = IP()
         self.cwnd = 1  # max of 1000 ; set back to 1 if packet dropped
         self.file_name = ''
+        self.file_path = ''
 
     def get_file_name(self, url):
         paths = urlparse(url)
         server_name = paths.netloc
+
+        get_path = paths.path
+        if get_path is '':
+            self.file_path = "/"
+        else:
+            self.file_path = paths.path
 
         individual_path = paths.path.split("/") # split the paths into sections
         individual_path = list(filter(None, individual_path)) # remove blanks
@@ -61,8 +68,7 @@ class TCP:
             self.file_name = 'index.html'
         else:
             self.file_name = individual_path[-1] # take last path
-        print(server_name)
-        print(self.file_name)
+
         return server_name
 
 
@@ -297,7 +303,7 @@ class TCP:
 
     def send_http_req(self):
 
-        req = 'GET / HTTP/1.1\r\nHost: david.choffnes.com/classes/cs5700f22/2MB.log\r\n' \
+        req = f'GET {self.file_path} HTTP/1.1\r\nHost: david.choffnes.com\r\n' \
               'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n' \
               'Accept-Language: en-US,en;q=0.5\r\n' \
               'Accept-Encoding: gzip, deflate\r\n' \

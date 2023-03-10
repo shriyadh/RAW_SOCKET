@@ -85,7 +85,34 @@ def start_download(url):
     #sock.establish_handshake(host_name, 80)
     #sock.send_request(get_request)
 
+# Sequence Number (raw): 2567054084 --- last ack i sent of handshake
+#Acknowledgment number (raw): 69312002 -- lask acknowl number i sent
 
+#  Sequence Number (raw): 2567054084 -- same as last ack
+# Acknowledgment number (raw): 69312002 -- same acknowledgemnt number
+###### the length of this packet was 2920 bytes
+
+####what server sent
+# Sequence Number (raw): 69312002
+# Acknowledgment number (raw): 2567054347
+# length was
+
+# Sequence Number (raw): 69312002
+# Acknowledgment number (raw): 2567054347
+# length was 2920
+
+# what i sentttt
+# Sequence Number (raw): 2567054347 (the acknowledgement number they gave)
+# Acknowledgment number (raw): 69314922 (their last sequence number + length of payload)
+
+# what they sent
+# Sequence Number (raw): 69314922
+# Acknowledgment number (raw): 2567054347
+# length was 1424
+
+# what i sent
+# Sequence Number (raw): 2567054347
+# Acknowledgment number (raw): 69316346 (their last sequence number + length of payload)
 
     # open file and read
     # fOpen = open(file, 'wb+')
