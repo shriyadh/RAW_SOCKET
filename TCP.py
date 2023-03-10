@@ -321,39 +321,60 @@ class TCP:
     def receive_http(self):
         # create priority queue
         packets = PriorityQueue()
-        sequence_num_expect = 0  # ????
+        sequence_num_expect = self.ack_num  # ????
         complete = False
 
-        # receive the incoming packets in a loop until all http data received
-        while not complete:
-            unpack_recv = TCPPacket()
-            packet_recv = self.ip_socket.receive_message(self.client_ip)
-            unpack_recv.client_ip = self.server_ip
-            unpack_recv.server_ip = self.client_ip
-            unpack_recv.unpack_received_packet(packet_recv, self.server_ip, self.client_ip)
+        # first response ack
+        unpack_recv = TCPPacket()
+        packet_recv = self.ip_socket.receive_message(self.client_ip)
+        unpack_recv.client_ip = self.server_ip
+        unpack_recv.server_ip = self.client_ip
+        unpack_recv.unpack_received_packet(packet_recv, self.server_ip, self.client_ip)
+        if unpack_recv.seq_num == sequence_num_expect:
+            print("yes!!!!!!")
 
-            # get the payload from the received packet
-            http_data = unpack_recv.data
-            # get the sequence number and length of the packet
-            sequence_num = unpack_recv.seq_num
-            # length = len(http_data)
+            # receive the incoming packets in a loop until all http data received
+            while not complete:
+                unpack_recv = TCPPacket()
+                packet_recv = self.ip_socket.receive_message(self.client_ip)
+                unpack_recv.client_ip = self.server_ip
+                unpack_recv.server_ip = self.client_ip
+                unpack_recv.unpack_received_packet(packet_recv, self.server_ip, self.client_ip)
 
-            # check to see if the packet is in order already
-            if sequence_num == sequence_num_expect:
-                complete = self.write_to_file(http_data)  # write to the file
-                # ack the packet
-                continue
+                # get the payload from the received packet
+                http_data = unpack_recv.data
+                # get the sequence number and length of the packet
+                sequence_num = unpack_recv.seq_num
+                length = len(http_data)
 
-            # add the sequence number and data to the queue
-            packets.put([sequence_num, http_data])
+                # check to see if the packet is in order already
+                if sequence_num == sequence_num_expect:
+                    complete = self.write_to_file(http_data)  # write to the file
+                    # update the expected num
+                    sequence_num_expect += length
+                    # write to the file
+                    self.write_to_file(http_data)
 
-            # check to see if buffer is ordered
-            # will need to account for case that seq. no not received
-            # will need to send multiple acks
-            while packets.queue[0][0] == sequence_num_expect:
-                http_data = packets.queue[0][1]  # get associated http data
-                complete = self.write_to_file(http_data)
-                # send ack
+                    # ack the packet
+                    resp_ack = self.create_tcp_ACK()
+                    resp_packet = resp_ack.pack_TCP_packet()
+                    self.ip_socket.send_message(resp_packet)
+                    continue
+
+                # add the sequence number and data to the queue
+                packets.put([sequence_num, http_data])
+
+                # check to see if buffer is ordered
+                # will need to account for case that seq. no not received
+                # will need to send multiple acks
+                while packets.queue[0][0] == sequence_num_expect: # while we have the expected seq num
+                    http_data = packets.queue[0][1]  # get associated http data
+                    complete = self.write_to_file(http_data)
+                    # send ack
+                    resp_ack = self.create_tcp_ACK()
+                    resp_packet = resp_ack.pack_TCP_packet()
+                    self.ip_socket.send_message(resp_packet)
+
 
     def write_to_file(self, data):
         complete = False
@@ -364,7 +385,9 @@ class TCP:
         # if length of file is equal to content length, file is done and set complete to true
 
         with open(self.file_name, "ab") as output:
+            print("DATTTTTTTAAAAAAAAAAAAA",data)
             output.write(data)
+            complete = True
 
         return complete
 
