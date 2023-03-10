@@ -4,6 +4,7 @@ import socket
 import struct
 import sys
 import time
+from queue import PriorityQueue
 from random import randint
 
 from IP import IP
@@ -300,6 +301,68 @@ class TCP:
         h_seg = h_packet.pack_TCP_packet()
         self.ip_socket.send_message(h_seg)
 
+    def receive_http(self):
+        # create priority queue
+        packets = PriorityQueue()
+        sequence_num_expect = 0 # ????
+        complete = False
+
+        # receive the incoming packets in a loop until all http data received
+        while not complete:
+            unpack_recv = TCPPacket()
+            packet_recv = self.ip_socket.receive_message(self.client_ip)
+            unpack_recv.client_ip = self.server_ip
+            unpack_recv.server_ip = self.client_ip
+            unpack_recv.unpack_received_packet(packet_recv, self.server_ip, self.client_ip)
+
+            # get the payload from the received packet
+            http_data = unpack_recv.data
+            # get the sequence number and length of the packet
+            sequence_num = unpack_recv.seq_num
+            length = len(http_data)
+
+            # check to see if the packet is in order already
+            if sequence_num == sequence_num_expect:
+                complete = handle_http(http_data) # write to the file
+                # ack the packet
+                continue
+
+            # add the sequence number and data to the queue
+            packets.put((sequence_num,http_data))
+
+            # check to see if buffer is ordered
+
+
+
+
+
+
+
+unpack_recv = None
+
+        try:
+            # receive tcp packet w/o ip headers
+            cur = time.time()
+            while(time.time() - cur) < 1:
+                # create new tcp packet
+                unpack_recv = TCPPacket()
+                try:
+                    packet_recv = self.ip_socket.receive_message(self.client_ip)  # NEED MARIAH"S CODE FOR THIS
+                except:
+                    continue
+
+                print("in here")
+                unpack_recv.client_ip = self.server_ip
+                unpack_recv.server_ip = self.client_ip
+                unpack_recv.unpack_received_packet(packet_recv, self.server_ip, self.client_ip)
+                print("UNPACKED")
+
+                # see if packet is correct
+                if unpack_recv.client_port == self.server_port and unpack_recv.server_port == self.client_port:
+                    print("############################FOUND")
+                    break
+                else:
+                    continue
 
 class TCPPacket:
 
