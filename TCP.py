@@ -372,7 +372,7 @@ class TCP:
                 for i in packets.queue:
                     print("queeeeuuueee", i[0])
 
-                while not packets.empty() and packets.queue[0][0] == sequence_num_expect:  # while we have the expected seq num
+                while not packets.empty() and packets.queue[0][0] == sequence_num_expect:  #while we have the expected seq num
 
                     print("matches")
                     d = packets.get()
