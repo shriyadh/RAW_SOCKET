@@ -2,9 +2,8 @@
 # TOKEN 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
 # My password Benzene66
 # Sequence Number (raw): 300800002
-# Acknowledgment number (raw): 51330
-#Sequence Number: 310    (relative sequence number) (should be 51330)
-#Acknowledgment number (raw): 300801362 (should be 300801422)
+# to compare files use: cmp 2MB.log 2MB-MINE.log
+# or compare checksums with md5sum filename.log
 
 
 import ssl
@@ -15,12 +14,7 @@ from struct import *
 from urllib.parse import urlparse
 from TCP import TCP
 
-# Sequence Number (raw): 462577461
-# Acknowledgment number (raw): 2197703579
-# length:
 
-#Sequence Number (raw): 2197703579 (last ack)
-#Acknowledgment number (raw): 462577462 (seq + 1)
 class RawSocket():
 
     receiver_socket = None
@@ -94,34 +88,7 @@ def start_download(url):
     #sock.establish_handshake(host_name, 80)
     #sock.send_request(get_request)
 
-# Sequence Number (raw): 2567054084 --- last ack i sent of handshake
-#Acknowledgment number (raw): 69312002 -- lask acknowl number i sent
 
-#  Sequence Number (raw): 2567054084 -- same as last ack
-# Acknowledgment number (raw): 69312002 -- same acknowledgemnt number
-###### the length of this packet was 2920 bytes
-
-####what server sent
-# Sequence Number (raw): 69312002
-# Acknowledgment number (raw): 2567054347
-# length was
-
-# Sequence Number (raw): 69312002
-# Acknowledgment number (raw): 2567054347
-# length was 2920
-
-# what i sentttt
-# Sequence Number (raw): 2567054347 (the acknowledgement number they gave)
-# Acknowledgment number (raw): 69314922 (their last sequence number + length of payload)
-
-# what they sent
-# Sequence Number (raw): 69314922
-# Acknowledgment number (raw): 2567054347
-# length was 1424
-
-# what i sent
-# Sequence Number (raw): 2567054347
-# Acknowledgment number (raw): 69316346 (their last sequence number + length of payload)
 
     # open file and read
     # fOpen = open(file, 'wb+')
