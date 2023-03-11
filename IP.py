@@ -54,14 +54,14 @@ class IP:
 
             while True:
                 recv_pack = IP_Packet()
-                print("server = ", recv_pack.server_ip)
-                print("client = ", recv_pack.client_ip)
+                #print("server = ", recv_pack.server_ip)
+                #print("client = ", recv_pack.client_ip)
                 unpack_this = self.recv_socket.recv(2048)
 
                 recv_pack.unpack_packet(unpack_this)
                 # unpack ip_packet and retrieve tcp part
-                print("server = ", recv_pack.server_ip)
-                print("client = ", recv_pack.client_ip)
+                #print("server = ", recv_pack.server_ip)
+                #print("client = ", recv_pack.client_ip)
                 if recv_pack.client_ip == self.server_ip and recv_pack.server_ip == self.client_ip and recv_pack.protocol == socket.IPPROTO_TCP:
                     print("FOUND!!!!!!!!!!!")
 

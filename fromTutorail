@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # TOKEN 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
 # My password Benzene66
+# Sequence Number (raw): 300800002
+# Acknowledgment number (raw): 51330
+#Sequence Number: 310    (relative sequence number) (should be 51330)
+#Acknowledgment number (raw): 300801362 (should be 300801422)
 
 
 import ssl
@@ -11,7 +15,12 @@ from struct import *
 from urllib.parse import urlparse
 from TCP import TCP
 
+# Sequence Number (raw): 462577461
+# Acknowledgment number (raw): 2197703579
+# length:
 
+#Sequence Number (raw): 2197703579 (last ack)
+#Acknowledgment number (raw): 462577462 (seq + 1)
 class RawSocket():
 
     receiver_socket = None
