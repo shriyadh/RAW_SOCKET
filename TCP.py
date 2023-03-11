@@ -225,47 +225,12 @@ class TCP:
         except:
             print("TIMEOUT")
 
-        # self.ack_num = recv_FIN_ACK.seq_num + 1
-        # self.sq_num = recv_FIN_ACK.ack_num
+        self.ack_num = recv_FIN_ACK.seq_num + 1
+        self.sq_num = recv_FIN_ACK.ack_num
         # print("SEQ", self.sq_num)
         # print("ACk", self.ack_num)
 
         print("RECEIVED BYE ACKKK+++++++++++++++++++++++++++++++ ")
-
-        # server needs to then send fin/ack
-        try:
-            # receive tcp packet w/o ip headers
-            cur = time.time()
-            while (time.time() - cur) < 1:
-                # create new tcp packet
-                recv_FIN_ACK = TCPPacket()
-                try:
-                    # print("OOOOOOOOOOOOOOOOOOOO", self.client_ip, self.server_ip)
-                    packet_recv_FIN = self.ip_socket.receive_message(self.client_ip)  # NEED MARIAH"S CODE FOR THIS
-                except:
-                    continue
-
-                # print("in here")
-                recv_FIN_ACK.client_ip = self.server_ip
-                recv_FIN_ACK.server_ip = self.client_ip
-                recv_FIN_ACK.unpack_received_packet(packet_recv_FIN, self.server_ip, self.client_ip)
-                print("UNPACKED")
-
-                # see if packet is correct
-                if recv_FIN_ACK.client_port == self.server_port and recv_FIN_ACK.server_port == self.client_port:
-                    if recv_FIN_ACK.client_ip == self.server_ip and recv_FIN_ACK.server_ip == self.client_ip:
-                        print("############################FOUND")
-                        break
-                else:
-                    continue
-        except:
-            print("TIMEOUT")
-
-        print("RECEIVED BYE FIN/ACK+++++++++++++++++++++++++++++++ ")
-
-        # SEND FINAL ACK BACK
-        self.ack_num = recv_FIN_ACK.seq_num + 1
-        self.sq_num = recv_FIN_ACK.ack_num
 
         # SEND ACK for final FIN ACK
         final_ack = self.create_tcp_ACK()
