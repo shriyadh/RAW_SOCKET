@@ -68,7 +68,7 @@ class TCP:
         if not individual_path:  # if empty, there was no filename given
             self.file_name = 'index.html'
         else:
-            self.file_name = '2MB-MINE.log'  # take last path
+            self.file_name = '50MB-MINE.log'  # take last path
             print("made")
 
         return server_name

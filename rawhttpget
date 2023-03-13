@@ -79,7 +79,6 @@ def start_download(url):
     # make request
     get_request = make_request(url)
     print(get_request)
-
     # add TCP header + IP header to create IP Datagram
     #sock = TCP()
     #sock.establish_handshake(host_name, 80)
@@ -103,7 +102,7 @@ def main():
 
     #start_download(url)
     test = TCP()
-    test.establish_handshake("http://david.choffnes.com/classes/cs5700f22/2MB.log ", 80)
+    test.establish_handshake("http://david.choffnes.com/classes/cs5700f22/50MB.log ", 80)
     test.send_http_req()
     test.receive_http()
     #test.begin_teardown()

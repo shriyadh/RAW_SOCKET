@@ -51,8 +51,8 @@ class IP:
         #socket.socket(('localhost',0))
 
         try:
-
-            while True:
+            cur = time.time()
+            while (time.time() < 180):
                 recv_pack = IP_Packet()
                 #print("server = ", recv_pack.server_ip)
                 #print("client = ", recv_pack.client_ip)
@@ -66,8 +66,9 @@ class IP:
                     print("FOUND!!!!!!!!!!!")
 
                     return recv_pack.data
-        except:
+        except socket.error as err:
             print("TIMEOUT")
+            sys.exit("Connection error. Exiting program....")
 
     def send_message(self, tcp_seg):
 
