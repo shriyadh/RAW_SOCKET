@@ -166,4 +166,3 @@ class IP_Packet:
 
         # pass to tcp using offset value
         return self.data
-
