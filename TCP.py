@@ -189,6 +189,8 @@ class TCP:
         ################ THREE WAY HANDSHAKE ESTABLISHED #################
 
     def begin_teardown(self):
+
+        # SEND FIN ACK
         finish_packet = self.create_tcp_FIN()
         final_bye = finish_packet.pack_TCP_packet()
         self.ip_socket.send_message(final_bye)
@@ -201,12 +203,12 @@ class TCP:
         try:
             # receive tcp packet w/o ip headers
             cur = time.time()
-            while (time.time() - cur) < 1:
+            while (time.time() - cur) < 60:
                 # create new tcp packet
                 recv_FIN_ACK = TCPPacket()
                 try:
                     # print("OOOOOOOOOOOOOOOOOOOO", self.client_ip, self.server_ip)
-                    packet_recv_FIN = self.ip_socket.receive_message(self.client_ip)  # NEED MARIAH"S CODE FOR THIS
+                    packet_recv_FIN = self.ip_socket.receive_message(self.client_ip)
                 except:
                     continue
 
@@ -243,7 +245,7 @@ class TCP:
 
         self.ip_socket.send_message(pack_final_ack)
 
-        # self.ip_socket.close_sockets()
+        self.ip_socket.close_sockets()
 
         print("********************* CONNECTION TEARDOWN **************")
         # self.ip_socket.close_sockets()
