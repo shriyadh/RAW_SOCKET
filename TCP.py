@@ -444,6 +444,20 @@ class TCP:
         print("ENDDDDDD OFFFF FILEEEE")
         self.write_to_file()
 
+    def chunked_encoding(self, recv_data):
+
+        data = recv_data.split(b"\r\n")
+
+        data_total = b''
+
+        for i in range(len(data)):
+            if i % 2 == 1:
+                data_total += data[i]
+            elif data[i] == b"0":
+                return data_total
+
+        return  data_total
+
     def write_to_file(self):
         splitter = bytearray("\r\n\r\n", "utf-8")  # split header from content
         file = self.file_data.split(splitter)  # split header into fields
