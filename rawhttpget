@@ -79,7 +79,6 @@ def start_download(url):
     # make request
     get_request = make_request(url)
     print(get_request)
-
     # add TCP header + IP header to create IP Datagram
     #sock = TCP()
     #sock.establish_handshake(host_name, 80)

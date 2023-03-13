@@ -103,7 +103,7 @@ class TCP:
         print("CLIENT IP IS___ " + self.client_ip)
 
         # pick up any random port number which is not reserved
-        self.client_port = randint(1024, 65535)  # self.ip_socket.bind_socket()
+        self.client_port = port #randint(1024, 65535)  # self.ip_socket.bind_socket()
         # self.ip_socket.recv_socket.bind((self.client_ip,0))
         # self.client_port = self.ip_socket.recv_socket.getsockname()[1]
         # print("CLIENT PORT IS___ ", self.client_port)
@@ -128,7 +128,7 @@ class TCP:
         self.ip_socket.send_message(tcp_seg)  # NEED MARIAH'S CODE FOR THIS
 
         #  NEXT --- receive SYN ACK ------------------- HOW ARE WE HANDLING CONGESTION WINDOW??? WHAT CHECKS DO WE NEED?
-        # send_backup = tcp_seg
+        send_backup = tcp_seg
         print("FIRST SYNNN", tcp_packet.seq_num)
         print("FIRST ACKKK", tcp_packet.ack_num)
 
@@ -137,7 +137,7 @@ class TCP:
         try:
             # receive tcp packet w/o ip headers
             cur = time.time()
-            while (time.time() - cur) < 1:
+            while (time.time() - cur) < 60:
                 # create new tcp packet
                 unpack_recv = TCPPacket()
                 try:
@@ -160,7 +160,7 @@ class TCP:
 
         except:
             print("EXCEPTION")
-            self.cwnd -= 1
+            self.cwnd = 1
             self.ip_socket.send_message(send_backup)  # NEED MARIAH'S CODE FOR THIS
 
         if unpack_recv.ack_num == self.sq_num + 1 and unpack_recv.syn == 1 and unpack_recv.ack == 1:
@@ -189,6 +189,8 @@ class TCP:
         ################ THREE WAY HANDSHAKE ESTABLISHED #################
 
     def begin_teardown(self):
+
+        # SEND FIN ACK
         finish_packet = self.create_tcp_FIN()
         final_bye = finish_packet.pack_TCP_packet()
         self.ip_socket.send_message(final_bye)
@@ -201,12 +203,12 @@ class TCP:
         try:
             # receive tcp packet w/o ip headers
             cur = time.time()
-            while (time.time() - cur) < 1:
+            while (time.time() - cur) < 60:
                 # create new tcp packet
                 recv_FIN_ACK = TCPPacket()
                 try:
                     # print("OOOOOOOOOOOOOOOOOOOO", self.client_ip, self.server_ip)
-                    packet_recv_FIN = self.ip_socket.receive_message(self.client_ip)  # NEED MARIAH"S CODE FOR THIS
+                    packet_recv_FIN = self.ip_socket.receive_message(self.client_ip)
                 except:
                     continue
 
@@ -243,7 +245,7 @@ class TCP:
 
         self.ip_socket.send_message(pack_final_ack)
 
-        # self.ip_socket.close_sockets()
+        self.ip_socket.close_sockets()
 
         print("********************* CONNECTION TEARDOWN **************")
         # self.ip_socket.close_sockets()
@@ -329,6 +331,7 @@ class TCP:
         packets = PriorityQueue()
         sequence_num_expect = self.ack_num
         fin_flag = 0
+        seq_set = set()
 
         # first response ack
         unpack_recv = TCPPacket()
@@ -341,14 +344,32 @@ class TCP:
             print("yes!!!!!!")
 
             # receive the incoming packets in a loop until all http data received
+
             while not fin_flag:
                 print("not complete")
                 print("expected", sequence_num_expect)
-                unpack_recv = TCPPacket()
-                packet_recv = self.ip_socket.receive_message(self.client_ip)
-                unpack_recv.client_ip = self.server_ip
-                unpack_recv.server_ip = self.client_ip
-                unpack_recv.unpack_received_packet(packet_recv, self.server_ip, self.client_ip)
+
+                try:
+                    cur = time.time()
+                    while (time.time() - cur) < 60:
+                        unpack_recv = TCPPacket()
+                        try:
+                            packet_recv = self.ip_socket.receive_message(self.client_ip)
+                        except:
+                            continue
+                        unpack_recv.client_ip = self.server_ip
+                        unpack_recv.server_ip = self.client_ip
+                        unpack_recv.unpack_received_packet(packet_recv, self.server_ip, self.client_ip)
+
+                        # Filter out
+                        if unpack_recv.client_port == self.server_port and unpack_recv.server_port == self.client_port:
+                            break
+                        else:
+                            continue
+                except:
+                    print("timeout")
+                    self.cwnd = 1
+                    # SEND BACK UP ACKKKKK ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
                 # get the sequence number and length of the packet
                 sequence_num = unpack_recv.seq_num
@@ -363,14 +384,18 @@ class TCP:
                 # print("~~~~~~~~~~~~~~~~~~expected seq num", sequence_num_expect)
 
                 # add the sequence number and data to the queue
-                packets.put((sequence_num, http_data))
+                # check if seq number is already in the set
+                if sequence_num not in seq_set:
+                    packets.put((sequence_num, http_data))
+                    seq_set.add(sequence_num)
+                else:
+                    # do nothing --- do not add to queue cause DUPLICATE
+                    pass
 
                 # check to see if buffer is ordered
                 # will need to account for case that seq. no not received
                 # will need to send multiple acks
 
-                for i in packets.queue:
-                    print("queeeeuuueee", i[0])
 
                 while not packets.empty() and packets.queue[0][0] == sequence_num_expect:  #while we have the expected seq num
 
@@ -388,6 +413,10 @@ class TCP:
                     print("my sent ack", self.ack_num)
                     # print("ack in second", self.ack_num)
                     # print("seq num of pac",self.sq_num)
+                    if self.cwnd +1 >= 1000:
+                        self.cwnd = 1000
+                    else:
+                        self.cwnd += 1
 
                     if fin_flag == 0:
                         # send ack
@@ -400,6 +429,7 @@ class TCP:
                         print("not updated seq expect", sequence_num_expect)
                         sequence_num_expect = self.ack_num
                         print("updated seq expect", sequence_num_expect)
+
                     if fin_flag == 1:
                         # send fin
                         # resp_fin = self.create_tcp_FIN()
@@ -415,6 +445,20 @@ class TCP:
 
         print("ENDDDDDD OFFFF FILEEEE")
         self.write_to_file()
+
+    def chunked_encoding(self, recv_data):
+
+        data = recv_data.split(b"\r\n")
+
+        data_total = b''
+
+        for i in range(len(data)):
+            if i % 2 == 1:
+                data_total += data[i]
+            elif data[i] == b"0":
+                return data_total
+
+        return  data_total
 
     def write_to_file(self):
         splitter = bytearray("\r\n\r\n", "utf-8")  # split header from content
