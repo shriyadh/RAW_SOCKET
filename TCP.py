@@ -68,7 +68,7 @@ class TCP:
         if not individual_path:  # if empty, there was no filename given
             self.file_name = 'index.html'
         else:
-            self.file_name = '50MB-MINE.log'  # take last path
+            self.file_name = '2MB-MINE.log'  # take last path
             print("made")
 
         return server_name
@@ -128,7 +128,7 @@ class TCP:
         self.ip_socket.send_message(tcp_seg)  # NEED MARIAH'S CODE FOR THIS
 
         #  NEXT --- receive SYN ACK ------------------- HOW ARE WE HANDLING CONGESTION WINDOW??? WHAT CHECKS DO WE NEED?
-        # send_backup = tcp_seg
+        send_backup = tcp_seg
         print("FIRST SYNNN", tcp_packet.seq_num)
         print("FIRST ACKKK", tcp_packet.ack_num)
 
