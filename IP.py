@@ -169,6 +169,7 @@ class IP_Packet:
         if calculate_checksum(header) != 0:
             print(calculate_checksum(header))
             print("ERROR IN IP CHECKSUM")
+            raise ChecksumErr("IP PACKET")
         else:
             #print(calculate_checksum(header))
             print("NO IP CHECKSUM ERROR")

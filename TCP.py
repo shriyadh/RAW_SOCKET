@@ -96,7 +96,6 @@ class TCP:
         try:
             sock.connect(("david.choffnes.com", 80))
             ip, port = sock.getsockname()
-            print("))IP*****************************************", ip)
 
         except Exception as err:
             raise err
@@ -130,7 +129,7 @@ class TCP:
                 # create new tcp packet
                 unpack_recv = TCPPacket()
                 try:
-                    packet_recv = self.ip_socket.receive_message(self.client_ip)  # NEED MARIAH"S CODE FOR THIS
+                    packet_recv = self.ip_socket.receive_message(self.client_ip)
                 except:
                     continue
 
@@ -143,12 +142,16 @@ class TCP:
                 else:
                     continue
 
-        except:
+        except CheckSumErr as err:
             print("EXCEPTION")
+            self.cwnd -= 1
+            self.ip_socket.send_message(send_backup)
+        except:
+            print("Timeout")
             self.cwnd = 1
-            self.ip_socket.send_message(send_backup)  # NEED MARIAH'S CODE FOR THIS
+            self.ip_socket.send_message(send_backup)
 
-        # filter packets that belong to the client
+            # filter packets that belong to the client
         if unpack_recv.ack_num == self.sq_num + 1 and unpack_recv.syn == 1 and unpack_recv.ack == 1:
             self.ack_num = unpack_recv.seq_num + 1
             self.sq_num = unpack_recv.ack_num
@@ -202,7 +205,7 @@ class TCP:
                     break
                 else:
                     continue
-        except:
+        except CheckSumErr as err:
             print("TIMEOUT")
 
         self.ack_num = recv_FIN_ACK.seq_num + 1
@@ -345,6 +348,11 @@ class TCP:
                             break
                         else:
                             continue
+
+                except CheckSumErr as err:
+                    print("Checksum")
+                    self.cwnd -= 1
+
                 except:
                     print("timeout")
                     self.cwnd = 1
@@ -400,8 +408,6 @@ class TCP:
                         # resp_packet = resp_fin.pack_TCP_packet()
                         self.ack_num = sequence_num + 1
                         self.begin_teardown()
-
-                        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 
         self.write_to_file()
 
@@ -506,10 +512,7 @@ class TCPPacket:
         self.wnd_size = tcp_header[6]
         self.checksum = struct.unpack('H', recv_segment[16:18])
         self.urg = struct.unpack('!H', recv_segment[18:20])
-        self.data = recv_segment[20:]
-
-        # this is the correct tcp data
-        #         self.data = recv_segment[self.offset * 4:]
+        self.data = recv_segment[self.offset:]
 
         # flags in segment
         self.fin = flags & 0x01
@@ -521,7 +524,7 @@ class TCPPacket:
 
         # pseudo header fields from IP header -- should have source IP, Destination IP, Protocol field
         # TCP length, TCP header ===== needed for calculating checksum accurately
-        tcp_len = len(self.data) + (self.offset * 4)
+        tcp_len = len(self.data) + (self.offset)
 
         pseudo_header = struct.pack('!4s4sBBH',
                                     socket.inet_aton(self.client_ip),
@@ -533,8 +536,15 @@ class TCPPacket:
         if calculate_checksum(to_check) != 0:
             print(calculate_checksum(to_check))
             print("Error in Checksum TCP")
-            pass
+            raise CheckSumErr("TCP PACKET")
         else:
             print("no error in unpacking tcp")
             return to_check
 
+
+class CheckSumErr(Exception):
+    def __init__(self, type):
+        self.type = type
+
+    def __str__(self):
+        return self.type + "Checksum Error"
