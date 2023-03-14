@@ -13,6 +13,7 @@ from IP import IP
 
 def calculate_checksum(msg):
     """
+    This method calculates the checksum of the headers
     :param msg: Takes in the message data
     :return: checksum
     """
