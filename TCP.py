@@ -68,15 +68,16 @@ class TCP:
         if not individual_path:  # if empty, there was no filename given
             self.file_name = 'index.html'
         else:
-            self.file_name = '2MB-MINE.log'  # take last path
+            self.file_name = 'test-MINE.log'  # take last path
             print("made")
 
         return server_name
 
-    def establish_handshake(self, server_ip, server_port):
+    def establish_handshake(self, url, server_port):
         # get the file name from the server name by parsing
         # set it to self.file_name
-        server_ip = self.get_file_name(server_ip)
+        server_ip = self.get_file_name(url)
+        print(server_ip)
         print("\n\n*****ESTABLISHING handshake****\n\n")
 
         # server IP address # DNS === get Server IP Address
@@ -305,7 +306,7 @@ class TCP:
 
     def send_http_req(self):
 
-        req = f'GET {self.file_path}HTTP/1.1\r\nHost: david.choffnes.com\r\n' \
+        req = f'GET {self.file_path} HTTP/1.1\r\nHost: david.choffnes.com\r\n' \
               'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n' \
               'Accept-Language: en-US,en;q=0.5\r\n' \
               'Accept-Encoding: gzip, deflate\r\n' \
@@ -463,6 +464,7 @@ class TCP:
     def write_to_file(self):
         splitter = bytearray("\r\n\r\n", "utf-8")  # split header from content
         file = self.file_data.split(splitter)  # split header into fields
+
         header = file[0]
         self.file_data = file[1]  # only store the body
         print("######################################", file[0])
@@ -598,12 +600,3 @@ class TCPPacket:
 
     # # --------------  CREATE METHOD TO SET FIELDS FOR THE TCP PACKET TO SEND
 
-
-def main():
-    # testing
-    test = TCP()
-    test.establish_handshake("david.choffnes.com", 80)
-
-
-if __name__ == "__main__":
-    main()

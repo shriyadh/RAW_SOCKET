@@ -12,32 +12,15 @@ from urllib.parse import urlparse
 from TCP import TCP
 
 
-class RawSocket():
-
-    receiver_socket = None
-
-    sender_socket = None
-
-    remote_host = ""
-    local_host  = ""
-    remote_port = -9999
-    local_port = -9999
-    def __init__(self):
-        self.sender_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_RAW)
-        self.receiver_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
-        self.local_port = randint(1001, 65535)
-
-        self.local_IPAddress = ip
-
-
-    def connect(self, host, port):
-
-        self.remote_host = host
-        self.remote_port = 80
-        self.tcp_seq = 0
-
-
 def parse_cmd_line():
+    """
+    Parses command line arguments to retrieve file to be downloaded.
+    :return: url for downloading file.
+    """
+
+    if len(sys.argv) > 2:
+        sys.exit("Expected 2 inputs. Found more.")
+
     try:
         url = sys.argv[1]
     except:
@@ -46,69 +29,23 @@ def parse_cmd_line():
     return url
 
 
-def get_file_name(url):
-    # check if proper path is given, if not set default
-    if url.endswith('/'):
-        file = "index.html"
-    else:
-        # split to get file name
-        file = url.split('/')[-1]
-
-    return file
-
-
-def make_request(url):
-    return "GET " + url + " HTTP/1.0\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\r\n" \
-                          "Connection: close\r\n\r\n"
-
-
 def start_download(url):
-    # parse file name
-    file = get_file_name(url)
-    print(file)
-
-    # get host and path
-    eg = "https://david.choffnes.com/classes/cs5700f22/2MB.log"
-    urlInformation = urlparse(url)
-    print(urlInformation)
-
-    host_name = urlInformation.netloc
-    filePath = urlInformation.path
-    print(filePath)
-
-    # make request
-    get_request = make_request(url)
-    print(get_request)
-    # add TCP header + IP header to create IP Datagram
-    #sock = TCP()
-    #sock.establish_handshake(host_name, 80)
-    #sock.send_request(get_request)
-
-
-
-    # open file and read
-    # fOpen = open(file, 'wb+')
-
-    # create socket
-    # create_socket()
+    """
+    This method deals with linking the TCP - IP layers with the application layers.
+    Drives the flow of the program -- establish handshake, send request and receive/write data to file.
+    :param url: link to be downloaded
+    """
+    tcp_ip_socket = TCP()
+    tcp_ip_socket.establish_handshake(url, 80)
+    tcp_ip_socket.send_http_req()
+    tcp_ip_socket.receive_http()
 
 
 def main():
-    # testing
     # parse the cmd line to get the url download link
-    #url = parse_cmd_line()
-   # print(url)
-
-
-    #start_download(url)
-    test = TCP()
-    test.establish_handshake("http://david.choffnes.com/classes/cs5700f22/2MB.log ", 80)
-    test.send_http_req()
-    test.receive_http()
-    #test.begin_teardown()
-
-
-
+    url = parse_cmd_line()
+    # create the Application-TCP-IP layers and send request for download
+    start_download(url)
 
 
 if __name__ == "__main__":
