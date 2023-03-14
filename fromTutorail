@@ -14,6 +14,58 @@ from struct import *
 from urllib.parse import urlparse
 from TCP import TCP
 
+# # print("UNPACKING TCP%%%%%%%%%%%%%%%%%%%%%")
+# # print(recv_segment)
+# tcp_header = struct.unpack('!HHLLBBH', recv_segment[0:16])
+# # print("LMAOOOOOO")
+# self.client_ip = client
+# self.server_ip = server
+# self.client_port = tcp_header[0]
+# self.server_port = tcp_header[1]
+# self.seq_num = tcp_header[2]
+# self.ack_num = tcp_header[3]
+# offset = tcp_header[4]
+# self.offset = (offset >> 4) * 4  # giving 24 for first syn/ack response because the header has an options field
+# flags = tcp_header[5]
+# self.wnd_size = tcp_header[6]
+# self.checksum = struct.unpack('H', recv_segment[16:18])
+# self.urg = struct.unpack('!H', recv_segment[18:20])
+# self.data = recv_segment[self.offset:]  ## changed the data segment
+# # ("LMAOOOOOO")
+#
+# # flags in segment
+# self.fin = flags & 0x01
+# self.syn = (flags & 0x02) >> 1
+# self.rst = (flags & 0x04) >> 2
+# self.psh = (flags & 0x08) >> 3
+# self.ack = (flags & 0x10) >> 4
+# self.urg = (flags & 0x20) >> 5
+#
+# # pseudo header fields from IP header -- should have source IP, Destination IP, Protocol field
+# # TCP length, TCP header ===== needed for calculating checksum accurately
+# # tcp_len = len(self.data) + (offset * 4)
+# # tcp len is just size of entire segment, the above code does make sense but offset * 4 is giving 24 ???
+# tcp_len = len(recv_segment)
+#
+# pseudo_header = struct.pack('!4s4sBBH',
+#                             socket.inet_aton(self.client_ip),
+#                             socket.inet_aton(self.server_ip),
+#                             0, socket.IPPROTO_TCP, tcp_len)
+#
+# to_check = pseudo_header + recv_segment
+#
+# if calculate_checksum(to_check) != 0:
+#     print("Error in Checksum")
+#     pass
+#     # raise error
+# else:
+#     print("no error in unpacking")
+#     print("******** received checksum", hex(calculate_checksum(to_check)))
+#     return to_check
+#
+#
+# # # --------------  CREATE METHOD TO SET FIELDS FOR THE TCP PACKET TO SEND
+#
 
 class RawSocket():
 
