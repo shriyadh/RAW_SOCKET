@@ -397,6 +397,7 @@ class TCP:
                         # send fin
                         # resp_fin = self.create_tcp_FIN()
                         # resp_packet = resp_fin.pack_TCP_packet()
+                        print("###############BEGINNING TEARDOWN")
                         self.ack_num = sequence_num + 1
                         self.begin_teardown()
 
@@ -529,7 +530,9 @@ class TCPPacket:
         print(hex(calculate_checksum(to_check)))
 
         if calculate_checksum(to_check) != 0:
+            print("here")
             print(calculate_checksum(to_check))
+            print(hex(calculate_checksum(to_check)))
             print("Error in Checksum TCP")
             pass
         else:
