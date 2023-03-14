@@ -166,10 +166,11 @@ class IP_Packet:
         self.data = received_packet[self.ihl * 4: self.length]
         # ======= validate checksum ======
         header = received_packet[:self.ihl * 4]
-        print(self.checksum)
         if calculate_checksum(header) != 0:
+            print(calculate_checksum(header))
             print("ERROR IN IP CHECKSUM")
         else:
+            #print(calculate_checksum(header))
             print("NO IP CHECKSUM ERROR")
 
         # pass to tcp using offset value
