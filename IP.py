@@ -1,5 +1,6 @@
 import socket
 import struct
+import sys
 from random import randint
 
 
@@ -41,6 +42,7 @@ class IP:
         self.recv_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
         self.send_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_RAW)
 
+
     def close_sockets(self):
         """
         Once the data exchange is complete, close both receiving and sending sockets.
@@ -55,7 +57,7 @@ class IP:
         :param client_address: Local IP address
         :return: TCP segment
         """
-
+        self.recv_socket.settimeout(180) # set 3 minute timeout on receive socket
         try:
             while True:
                 recv_pack = IP_Packet()
@@ -63,8 +65,9 @@ class IP:
                 recv_pack.unpack_packet(unpack_this)
                 if recv_pack.client_ip == self.server_ip and recv_pack.server_ip == self.client_ip and recv_pack.protocol == socket.IPPROTO_TCP:
                     return recv_pack.data
-        except:
-            print("TIMEOUT")
+        except self.recv_socket.timeout:
+            print("Sorry, the connection has failed.")
+            sys.exit("TIMEOUT")
 
     def send_message(self, tcp_seg):
         """

@@ -308,11 +308,7 @@ class TCP:
 
         :return:
         """
-        # using a priority queue to keep track of in order packets
-        # put in the queue
-        # send ACKs for the first packet it is expected and add to the data field string
-        # remove from queue
-        # create priority queue
+
         packets = PriorityQueue()
         sequence_num_expect = self.ack_num
         fin_flag = 0
