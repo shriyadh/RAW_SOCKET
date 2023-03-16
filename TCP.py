@@ -317,6 +317,7 @@ class TCP:
         # keep track of ack numbers
         prev_sq_num = self.sq_num
         prev_ack_num = self.ack_num
+        self.ip_socket.recv_socket.settimeout(180)  # set socket timeout to 3 minutes
 
         # first response ack
         unpack_recv = TCPPacket()
@@ -329,15 +330,20 @@ class TCP:
             # receive the incoming packets in a loop until all http data received
 
             while not fin_flag:
+                self.ip_socket.recv_socket.settimeout(180) # give socket 3 minutes to receive data
 
                 try:
-                    cur = time.time()
-                    while (time.time() - cur) < 60:
+                    current_time = time.time()
+                    while True:
                         unpack_recv = TCPPacket()
                         try:
                             packet_recv = self.ip_socket.receive_message(self.client_ip)
-                        except:
-                            continue
+                        except self.ip_socket.recv_socket.timeout:
+                            print("Sorry the connection has failed.")
+                            self.ip_socket.recv_socket.close()
+                            self.ip_socket.send_socket.close()
+                            sys.exit()
+
                         unpack_recv.client_ip = self.server_ip
                         unpack_recv.server_ip = self.client_ip
                         unpack_recv.unpack_received_packet(packet_recv, self.server_ip, self.client_ip)
@@ -345,26 +351,29 @@ class TCP:
                         # Filter out
                         if unpack_recv.client_port == self.server_port and unpack_recv.server_port == self.client_port:
                             break
-                        else:
+
+                        response_time = time.time() - current_time # get how much time has passed since ack
+
+                        if response_time >= 60:  # one minute passes
+                            # resend ack
+                            print("timeout")
+                            self.cwnd = 1
+
+                            # retrieve preciously sent ack num and sequence nums
+                            self.sq_num = prev_sq_num
+                            self.ack_num = prev_ack_num
+
+                            # create and send backup ack
+                            resp_ack = self.create_tcp_ACK()
+                            resp_packet = resp_ack.pack_TCP_packet()
+                            self.ip_socket.send_message(resp_packet)
+                            current_time = time.time()
                             continue
 
                 except CheckSumErr as err:
                     print("Checksum")
                     self.cwnd -= 1
 
-                except:
-                    print("timeout")
-                    self.cwnd = 1
-
-                    # retrieve preciously sent ack num and sequence nums
-                    self.sq_num = prev_sq_num
-                    self.ack_num = prev_ack_num
-
-                    # create and send backup ack
-                    resp_ack = self.create_tcp_ACK()
-                    resp_packet = resp_ack.pack_TCP_packet()
-                    self.ip_socket.send_message(resp_packet)
-                    continue
 
                 # get the sequence number and length of the packet
                 sequence_num = unpack_recv.seq_num
@@ -381,7 +390,8 @@ class TCP:
                     # do nothing --- do not add to queue cause DUPLICATE
                     pass
 
-                while not packets.empty() and packets.queue[0][0] == sequence_num_expect:  # while we have the expected seq num
+                while not packets.empty() and packets.queue[0][
+                    0] == sequence_num_expect:  # while we have the expected seq num
                     d = packets.get()
                     sequence_num = d[0]
                     http_data = d[1]  # get associated http data

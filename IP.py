@@ -57,17 +57,14 @@ class IP:
         :param client_address: Local IP address
         :return: TCP segment
         """
-        self.recv_socket.settimeout(180) # set 3 minute timeout on receive socket
-        try:
-            while True:
-                recv_pack = IP_Packet()
-                unpack_this = self.recv_socket.recv(2048)
-                recv_pack.unpack_packet(unpack_this)
-                if recv_pack.client_ip == self.server_ip and recv_pack.server_ip == self.client_ip and recv_pack.protocol == socket.IPPROTO_TCP:
-                    return recv_pack.data
-        except self.recv_socket.timeout:
-            print("Sorry, the connection has failed.")
-            sys.exit("TIMEOUT")
+
+        while True:
+            recv_pack = IP_Packet()
+            unpack_this = self.recv_socket.recv(2048)
+            recv_pack.unpack_packet(unpack_this)
+            if recv_pack.client_ip == self.server_ip and recv_pack.server_ip == self.client_ip and recv_pack.protocol == socket.IPPROTO_TCP:
+                return recv_pack.data
+
 
     def send_message(self, tcp_seg):
         """
