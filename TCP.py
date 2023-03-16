@@ -315,8 +315,8 @@ class TCP:
         fin_flag = 0
         seq_set = set()
         # keep track of ack numbers
-        prev_sequence_num = self.sq_num
-        prev_acknow_num = self.ack_num
+        prev_sq_num = self.sq_num
+        prev_ack_num = self.ack_num
 
         # first response ack
         unpack_recv = TCPPacket()
@@ -326,7 +326,6 @@ class TCP:
         unpack_recv.unpack_received_packet(packet_recv, self.server_ip, self.client_ip)
 
         if unpack_recv.seq_num == sequence_num_expect:
-
             # receive the incoming packets in a loop until all http data received
 
             while not fin_flag:
@@ -358,8 +357,8 @@ class TCP:
                     self.cwnd = 1
 
                     # retrieve preciously sent ack num and sequence nums
-                    self.sq_num = prev_sequence_num
-                    self.ack_num = prev_acknow_num
+                    self.sq_num = prev_sq_num
+                    self.ack_num = prev_ack_num
 
                     # create and send backup ack
                     resp_ack = self.create_tcp_ACK()
@@ -382,11 +381,7 @@ class TCP:
                     # do nothing --- do not add to queue cause DUPLICATE
                     pass
 
-                # check to see if buffer is ordered
-                # will need to account for case that seq. no not received
-                # will need to send multiple acks
-                while not packets.empty() and packets.queue[0][
-                    0] == sequence_num_expect:  # while we have the expected seq num
+                while not packets.empty() and packets.queue[0][0] == sequence_num_expect:  # while we have the expected seq num
                     d = packets.get()
                     sequence_num = d[0]
                     http_data = d[1]  # get associated http data
@@ -397,8 +392,8 @@ class TCP:
                     self.sq_num = aknow_num
                     self.ack_num = sequence_num + length
                     # update the stored acknowledgement number and sequence number
-                    prev_sequence_num = self.sq_num
-                    prev_acknow_num = self.ack_num
+                    prev_sq_num = self.sq_num
+                    prev_ack_num = self.ack_num
                     # congestion window
                     if self.cwnd + 1 >= 1000:
                         self.cwnd = 1000
@@ -438,14 +433,12 @@ class TCP:
     def write_to_file(self):
         splitter = bytearray("\r\n\r\n", "utf-8")  # split header from content
         file = self.file_data.split(splitter)  # split header into fields
-
         header = file[0]
         self.file_data = file[1]  # only store the body
 
         # check status code
         status = bytearray("HTTP/1.1", "utf-8")
         if status in header:
-            print("IN HEADERRRRR CORECT STATUS")
             header = header.split()
             idx = header.index(status)
             status_code = header[idx + 1]
