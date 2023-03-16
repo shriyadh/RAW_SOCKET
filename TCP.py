@@ -38,6 +38,7 @@ class TCP:
     """
        This class implements features of the TCP Layer.
     """
+
     def __init__(self):
         self.client_ip = ''
         self.client_port = -999
@@ -313,6 +314,9 @@ class TCP:
         sequence_num_expect = self.ack_num
         fin_flag = 0
         seq_set = set()
+        # keep track of ack numbers
+        prev_sequence_num = self.sq_num
+        prev_acknow_num = self.ack_num
 
         # first response ack
         unpack_recv = TCPPacket()
@@ -352,14 +356,22 @@ class TCP:
                 except:
                     print("timeout")
                     self.cwnd = 1
-                    # SEND BACK UP ACKKKKK ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+                    # retrieve preciously sent ack num and sequence nums
+                    self.sq_num = prev_sequence_num
+                    self.ack_num = prev_acknow_num
+
+                    # create and send backup ack
+                    resp_ack = self.create_tcp_ACK()
+                    resp_packet = resp_ack.pack_TCP_packet()
+                    self.ip_socket.send_message(resp_packet)
+                    continue
 
                 # get the sequence number and length of the packet
                 sequence_num = unpack_recv.seq_num
                 aknow_num = unpack_recv.ack_num
                 http_data = unpack_recv.data
                 fin_flag = unpack_recv.fin
-                length = len(http_data)
 
                 # add the sequence number and data to the queue
                 # check if seq number is already in the set === DROP DUPLICATES
@@ -373,7 +385,8 @@ class TCP:
                 # check to see if buffer is ordered
                 # will need to account for case that seq. no not received
                 # will need to send multiple acks
-                while not packets.empty() and packets.queue[0][0] == sequence_num_expect: # while we have the expected seq num
+                while not packets.empty() and packets.queue[0][
+                    0] == sequence_num_expect:  # while we have the expected seq num
                     d = packets.get()
                     sequence_num = d[0]
                     http_data = d[1]  # get associated http data
@@ -383,8 +396,11 @@ class TCP:
                     length = len(http_data)
                     self.sq_num = aknow_num
                     self.ack_num = sequence_num + length
+                    # update the stored acknowledgement number and sequence number
+                    prev_sequence_num = self.sq_num
+                    prev_acknow_num = self.ack_num
                     # congestion window
-                    if self.cwnd +1 >= 1000:
+                    if self.cwnd + 1 >= 1000:
                         self.cwnd = 1000
                     else:
                         self.cwnd += 1
@@ -400,8 +416,6 @@ class TCP:
 
                     if fin_flag == 1:
                         # send fin
-                        # resp_fin = self.create_tcp_FIN()
-                        # resp_packet = resp_fin.pack_TCP_packet()
                         self.ack_num = sequence_num + 1
                         self.begin_teardown()
 
@@ -419,7 +433,7 @@ class TCP:
             elif data[i] == b"0":
                 return data_total
 
-        return  data_total
+        return data_total
 
     def write_to_file(self):
         splitter = bytearray("\r\n\r\n", "utf-8")  # split header from content
@@ -473,7 +487,7 @@ class TCPPacket:
         tcp_header_without_checksum = struct.pack('!HHLLBBH', self.client_port, self.server_port, self.seq_num,
                                                   self.ack_num, tcp_offset_res, tcp_flags,
                                                   self.wnd_size) + struct.pack('H', self.checksum) \
-                                      + struct.pack('!H',self.urg_ptr)
+                                      + struct.pack('!H', self.urg_ptr)
         # pseudo header fields from IP header -- should have source IP, Destination IP, Protocol field
         # TCP length, TCP header ===== needed for calculating checksum accurately
 
