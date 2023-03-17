@@ -143,11 +143,9 @@ class TCP:
                     continue
 
         except CheckSumErr as err:
-            print("EXCEPTION")
             self.cwnd -= 1
             self.ip_socket.send_message(send_backup)
         except:
-            print("Timeout")
             self.cwnd = 1
             self.ip_socket.send_message(send_backup)
 
@@ -300,12 +298,13 @@ class TCP:
         self.ip_socket.send_message(h_seg)
 
         # receive the response
-        self.receive_http()
+        self.download_http()
 
-    def receive_http(self):
+    def download_http(self):
         """
-
-        :return:
+        This function downloads the file over HTTP by sending and receiving acks.
+        Once a fin flag is received, all data has been received
+        :return: None
         """
         print("======DOWNLOAD BEGINNING======")
 
@@ -436,6 +435,10 @@ class TCP:
         return data_total
 
     def write_to_file(self):
+        """
+        This function writes the stored bytearray to file in the current directory
+        :return: None
+        """
         splitter = bytearray("\r\n\r\n", "utf-8")  # split header from content
         file = self.file_data.split(splitter)  # split header into fields
         header = file[0]
@@ -457,6 +460,11 @@ class TCP:
 
 
 class TCPPacket:
+    """
+    This class represents the TCP header as seen in datagrams.
+    All fields within the TCP header are given as instance variables.
+    This class contains two methods for packing and unpacking a TCP packet
+    """
 
     def __init__(self, data=b'', src_port=0, dest_port=80, src_ip='', dest_ip=''):
         self.client_ip = src_ip
@@ -479,6 +487,10 @@ class TCPPacket:
         self.data = data
 
     def pack_TCP_packet(self):
+        """
+        This method creates a packet with a TCP header and correctly computes the checksum
+        :return: TCP Segment
+        """
 
         tcp_offset_res = (self.offset << 4) + 0
         tcp_flags = self.fin + (self.syn << 1) + (self.rst << 2) + (self.psh << 3) + (self.ack << 4) + (self.urg << 5)
@@ -508,6 +520,11 @@ class TCPPacket:
         return tcp_segment
 
     def unpack_received_packet(self, recv_segment, client, server):
+        """
+        This method unpacks a packet after it has been received from the IP class.
+        It accurately computes the checksum to ensure the data has not been corrupted.
+        :return:
+        """
         tcp_header = struct.unpack('!HHLLBBH', recv_segment[0:16])
         self.client_ip = client
         self.server_ip = server
@@ -533,7 +550,7 @@ class TCPPacket:
 
         # pseudo header fields from IP header -- should have source IP, Destination IP, Protocol field
         # TCP length, TCP header ===== needed for calculating checksum accurately
-        tcp_len = len(self.data) + (self.offset)
+        tcp_len = len(self.data) + self.offset
 
         pseudo_header = struct.pack('!4s4sBBH',
                                     socket.inet_aton(self.client_ip),
@@ -545,7 +562,7 @@ class TCPPacket:
         if calculate_checksum(to_check) != 0:  # error in packet
             raise CheckSumErr("TCP PACKET")
         else:  # packet is fine
-            return to_check
+            pass
 
 
 class CheckSumErr(Exception):
