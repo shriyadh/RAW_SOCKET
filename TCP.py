@@ -48,6 +48,7 @@ class TCP:
         self.ack_num = 0
         self.ip_socket = IP()
         self.cwnd = 1  # max of 1000 ; set back to 1 if packet dropped
+        self.server_name = ''
         self.file_name = ''
         self.file_path = ''
         self.file_data = bytearray()
@@ -59,7 +60,7 @@ class TCP:
         :return: server name
         """
         paths = urlparse(url)
-        server_name = paths.netloc
+        self.server_name = paths.netloc
 
         get_path = paths.path
         if get_path is '':
@@ -75,7 +76,7 @@ class TCP:
         else:
             self.file_name = 'test-MINE.log'  # take last path
 
-        return server_name
+       # return server_name
 
     def establish_handshake(self, url, server_port):
         """
@@ -87,9 +88,9 @@ class TCP:
 
         # get the file name from the server name by parsing
         # set it to self.file_name
-        server_ip = self.get_file_name(url)
+        self.get_file_name(url)
         # server IP address # DNS === get Server IP Address
-        self.server_ip = socket.gethostbyname(server_ip)
+        self.server_ip = socket.gethostbyname(self.server_name)
         # server port is 80 (web)
         self.server_port = server_port
         # get local ip address
@@ -292,7 +293,7 @@ class TCP:
         """
 
         # GET request
-        req = f'GET {self.file_path} HTTP/1.1\r\nHost: david.choffnes.com\r\n' \
+        req = f'GET {self.file_path} HTTP/1.1\r\nHost: {self.server_name}\r\n' \
               'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n' \
               'Accept-Language: en-US,en;q=0.5\r\n' \
               'Accept-Encoding: gzip, deflate\r\n' \
@@ -303,6 +304,7 @@ class TCP:
         h_packet = self.create_tcp_PSH(req)
         h_seg = h_packet.pack_TCP_packet()
         self.ip_socket.send_message(h_seg)
+        print(req)
 
     def receive_http(self):
         """
@@ -548,10 +550,10 @@ class TCPPacket:
 
         if calculate_checksum(to_check) != 0:
             print(calculate_checksum(to_check))
-            #print("Error in Checksum TCP")
+            print("Error in Checksum TCP")
             raise CheckSumErr("TCP PACKET")
         else:
-           # print("no error in unpacking tcp")
+            print("no error in unpacking tcp")
             return to_check
 
 
