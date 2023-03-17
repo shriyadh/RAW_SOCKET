@@ -424,11 +424,12 @@ class TCP:
     def chunked_encoding(self, data_received):
 
         print("This file is Chunked!")
+        print(data_received)
 
         data = data_received.split(b"\r\n")
         chunked_data = b''
         for i in range(len(data)):
-            if i % 2 != 0:
+            if i % 2 ==1:
                 chunked_data += data[i]
             elif data[i] == b"0":
                 return chunked_data
@@ -440,6 +441,7 @@ class TCP:
         This function writes the stored bytearray to file in the current directory
         :return: None
         """
+        #print(self.file_data)
         splitter = bytearray("\r\n\r\n", "utf-8")  # split header from content
         file = self.file_data.split(splitter)  # split header into fields
         header = file[0]
@@ -455,19 +457,23 @@ class TCP:
             if status_code != b'200':  # only acceptable status code
                 sys.exit("Sorry, there was an error downloading the file.")
         if b"chunked" in header:
+
             contents = self.chunked_encoding(self.file_data)
-            with open(self.file_name, "wb+") as output:
+            with open(self.file_name, "wb") as output:
                 output.write(contents)
 
             print("======FILE DOWNLOAD COMPLETE======")
 
         else:
+
             self.write_to_file_non_chunk( self.file_data)
     def write_to_file_non_chunk(self,  file_data):
 
+        print("This file is not chunked")
+
         self.file_data = file_data
 
-        with open(self.file_name, "wb+") as output:
+        with open(self.file_name, "wb") as output:
             output.write(self.file_data)
         print("======FILE DOWNLOAD COMPLETE======")
 
