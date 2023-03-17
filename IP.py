@@ -51,10 +51,9 @@ class IP:
         self.recv_socket.close()
         self.send_socket.close()
 
-    def receive_message(self, client_address):
+    def receive_message(self):
         """
         It receives responses from the server, unpacks the IP Header and passes on the TCP segment to the TCP class.
-        :param client_address: Local IP address
         :return: TCP segment
         """
 

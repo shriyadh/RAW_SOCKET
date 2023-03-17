@@ -3,12 +3,7 @@
 # My password Benzene66
 
 
-import ssl
-import socket
 import sys
-from random import randint
-from struct import *
-from urllib.parse import urlparse
 from TCP import TCP
 
 
