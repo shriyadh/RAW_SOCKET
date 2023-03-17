@@ -76,8 +76,6 @@ class TCP:
         else:
             self.file_name = 'test-MINE.log'  # take last path
 
-       # return server_name
-
     def establish_handshake(self, url, server_port):
         """
         This method establishes the three-way handshake between client and server
@@ -87,7 +85,6 @@ class TCP:
         """
 
         # get the file name from the server name by parsing
-        # set it to self.file_name
         self.get_file_name(url)
         # server IP address # DNS === get Server IP Address
         self.server_ip = socket.gethostbyname(self.server_name)
@@ -304,7 +301,6 @@ class TCP:
         h_packet = self.create_tcp_PSH(req)
         h_seg = h_packet.pack_TCP_packet()
         self.ip_socket.send_message(h_seg)
-        print(req)
 
     def receive_http(self):
         """
@@ -330,22 +326,20 @@ class TCP:
 
         if unpack_recv.seq_num == sequence_num_expect:
             # receive the incoming packets in a loop until all http data received
-
             while not fin_flag:
-                self.ip_socket.recv_socket.settimeout(180) # give socket 3 minutes to receive data
-
+                self.ip_socket.recv_socket.settimeout(180)  # give socket 3 minutes to receive data
                 try:
                     current_time = time.time()
                     while True:
                         unpack_recv = TCPPacket()
                         try:
                             packet_recv = self.ip_socket.receive_message(self.client_ip)
-                        except self.ip_socket.recv_socket.timeout:
+                        except self.ip_socket.recv_socket.timeout:  # 3 minutes has passed
                             print("Sorry the connection has failed.")
                             self.ip_socket.recv_socket.close()
                             self.ip_socket.send_socket.close()
                             sys.exit()
-
+                        # retrieve fields from packet
                         unpack_recv.client_ip = self.server_ip
                         unpack_recv.server_ip = self.client_ip
                         unpack_recv.unpack_received_packet(packet_recv, self.server_ip, self.client_ip)
@@ -354,7 +348,7 @@ class TCP:
                         if unpack_recv.client_port == self.server_port and unpack_recv.server_port == self.client_port:
                             break
 
-                        response_time = time.time() - current_time # get how much time has passed since ack
+                        response_time = time.time() - current_time  # get how much time has passed since ack
 
                         if response_time >= 60:  # one minute passes
                             # resend ack
@@ -376,8 +370,7 @@ class TCP:
                     print("Checksum")
                     self.cwnd -= 1
 
-
-                # get the sequence number and length of the packet
+                # get the sequence number, ack num, and http data of the packet
                 sequence_num = unpack_recv.seq_num
                 aknow_num = unpack_recv.ack_num
                 http_data = unpack_recv.data
@@ -392,27 +385,28 @@ class TCP:
                     # do nothing --- do not add to queue cause DUPLICATE
                     pass
 
-                while not packets.empty() and packets.queue[0][
-                    0] == sequence_num_expect:  # while we have the expected seq num
-                    d = packets.get()
+                # while we have the expected sequence number
+                while not packets.empty() and packets.queue[0][0] == sequence_num_expect:
+                    d = packets.get()  # pop the first packet
                     sequence_num = d[0]
-                    http_data = d[1]  # get associated http data
-                    self.file_data += http_data  # add to byte string
+                    http_data = d[1]
+                    self.file_data += http_data  # add to bytearray
 
-                    # updated ack and seq number
                     length = len(http_data)
-                    self.sq_num = aknow_num
+                    self.sq_num = aknow_num # updated ack and seq number
                     self.ack_num = sequence_num + length
+
                     # update the stored acknowledgement number and sequence number
                     prev_sq_num = self.sq_num
                     prev_ack_num = self.ack_num
+
                     # congestion window
                     if self.cwnd + 1 >= 1000:
                         self.cwnd = 1000
                     else:
                         self.cwnd += 1
 
-                    if fin_flag == 0:
+                    if fin_flag == 0: # more data to come
                         # send ack
                         resp_ack = self.create_tcp_ACK()
                         resp_packet = resp_ack.pack_TCP_packet()
@@ -421,7 +415,7 @@ class TCP:
                         # update the expected num
                         sequence_num_expect = self.ack_num
 
-                    if fin_flag == 1:
+                    if fin_flag == 1: # all data received
                         # send fin
                         self.ack_num = sequence_num + 1
                         self.begin_teardown()
@@ -455,7 +449,7 @@ class TCP:
             idx = header.index(status)
             status_code = header[idx + 1]
             print(status_code)
-            if status_code != b'200':
+            if status_code != b'200':  # only acceptable status code
                 sys.exit("Sorry, there was an error downloading the file.")
 
         with open(self.file_name, "wb") as output:
