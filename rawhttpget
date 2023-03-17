@@ -36,10 +36,7 @@ def start_download(url):
     :param url: link to be downloaded
     """
     tcp_ip_socket = TCP()
-    print("======THREE WAY HANDSHAKE IN PROGRESS======")
     tcp_ip_socket.establish_handshake(url, 80)
-    print("======THREE WAY HANDSHAKE ESTABLISHED======")
-    print("======DOWNLOAD BEGINNING======")
     tcp_ip_socket.send_http_req()
 
 

@@ -83,6 +83,7 @@ class TCP:
         :param server_port: host port
         :return: None
         """
+        print("======THREE WAY HANDSHAKE IN PROGRESS======")
 
         # get the file name from the server name by parsing
         self.get_file_name(url)
@@ -166,7 +167,9 @@ class TCP:
         # SEND ACK
         tcp_packet = self.create_tcp_ACK()
         tcp_seg = tcp_packet.pack_TCP_packet()
-        self.ip_socket.send_message(tcp_seg)  # NEED MARIAH'S CODE FOR THIS
+        self.ip_socket.send_message(tcp_seg)
+
+        print("======THREE WAY HANDSHAKE ESTABLISHED======")
 
     def begin_teardown(self):
         """
@@ -304,6 +307,7 @@ class TCP:
 
         :return:
         """
+        print("======DOWNLOAD BEGINNING======")
 
         packets = PriorityQueue()
         sequence_num_expect = self.ack_num
