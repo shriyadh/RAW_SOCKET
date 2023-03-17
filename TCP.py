@@ -63,7 +63,7 @@ class TCP:
         self.server_name = paths.netloc
 
         get_path = paths.path
-        if get_path is '':
+        if get_path == '':
             self.file_path = "/"
         else:
             self.file_path = paths.path
@@ -168,9 +168,6 @@ class TCP:
         tcp_seg = tcp_packet.pack_TCP_packet()
         self.ip_socket.send_message(tcp_seg)  # NEED MARIAH'S CODE FOR THIS
 
-        print("################### THREE WAY HANDSHAKE #####################")
-        ################ THREE WAY HANDSHAKE ESTABLISHED #################
-
     def begin_teardown(self):
         """
         This method deals with handling the proper connection teardown between client and server.
@@ -215,9 +212,6 @@ class TCP:
         pack_final_ack = final_ack.pack_TCP_packet()
         self.ip_socket.send_message(pack_final_ack)
         self.ip_socket.close_sockets()
-
-        print("********************* CONNECTION TEARDOWN **************")
-        # self.ip_socket.close_sockets()
 
     def create_tcp_FIN(self):
         """
@@ -302,6 +296,9 @@ class TCP:
         h_seg = h_packet.pack_TCP_packet()
         self.ip_socket.send_message(h_seg)
 
+        # receive the response
+        self.receive_http()
+
     def receive_http(self):
         """
 
@@ -325,6 +322,7 @@ class TCP:
         unpack_recv.unpack_received_packet(packet_recv, self.server_ip, self.client_ip)
 
         if unpack_recv.seq_num == sequence_num_expect:
+            print("\n ======RECEIVING PACKETS======\n")
             # receive the incoming packets in a loop until all http data received
             while not fin_flag:
                 self.ip_socket.recv_socket.settimeout(180)  # give socket 3 minutes to receive data
@@ -336,8 +334,7 @@ class TCP:
                             packet_recv = self.ip_socket.receive_message(self.client_ip)
                         except self.ip_socket.recv_socket.timeout:  # 3 minutes has passed
                             print("Sorry the connection has failed.")
-                            self.ip_socket.recv_socket.close()
-                            self.ip_socket.send_socket.close()
+                            self.ip_socket.close_sockets()
                             sys.exit()
                         # retrieve fields from packet
                         unpack_recv.client_ip = self.server_ip
@@ -352,7 +349,6 @@ class TCP:
 
                         if response_time >= 60:  # one minute passes
                             # resend ack
-                            print("timeout")
                             self.cwnd = 1
 
                             # retrieve preciously sent ack num and sequence nums
@@ -367,7 +363,6 @@ class TCP:
                             continue
 
                 except CheckSumErr as err:
-                    print("Checksum")
                     self.cwnd -= 1
 
                 # get the sequence number, ack num, and http data of the packet
@@ -393,7 +388,7 @@ class TCP:
                     self.file_data += http_data  # add to bytearray
 
                     length = len(http_data)
-                    self.sq_num = aknow_num # updated ack and seq number
+                    self.sq_num = aknow_num  # updated ack and seq number
                     self.ack_num = sequence_num + length
 
                     # update the stored acknowledgement number and sequence number
@@ -406,7 +401,7 @@ class TCP:
                     else:
                         self.cwnd += 1
 
-                    if fin_flag == 0: # more data to come
+                    if fin_flag == 0:  # more data to come
                         # send ack
                         resp_ack = self.create_tcp_ACK()
                         resp_packet = resp_ack.pack_TCP_packet()
@@ -415,7 +410,7 @@ class TCP:
                         # update the expected num
                         sequence_num_expect = self.ack_num
 
-                    if fin_flag == 1: # all data received
+                    if fin_flag == 1:  # all data received
                         # send fin
                         self.ack_num = sequence_num + 1
                         self.begin_teardown()
@@ -448,12 +443,13 @@ class TCP:
             header = header.split()
             idx = header.index(status)
             status_code = header[idx + 1]
-            print(status_code)
+
             if status_code != b'200':  # only acceptable status code
                 sys.exit("Sorry, there was an error downloading the file.")
 
         with open(self.file_name, "wb") as output:
             output.write(self.file_data)
+        print("======FILE DOWNLOAD COMPLETE======")
 
 
 class TCPPacket:
@@ -542,12 +538,9 @@ class TCPPacket:
 
         to_check = pseudo_header + recv_segment
 
-        if calculate_checksum(to_check) != 0:
-            print(calculate_checksum(to_check))
-            print("Error in Checksum TCP")
+        if calculate_checksum(to_check) != 0:  # error in packet
             raise CheckSumErr("TCP PACKET")
-        else:
-            print("no error in unpacking tcp")
+        else:  # packet is fine
             return to_check
 
 
