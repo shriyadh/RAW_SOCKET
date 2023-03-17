@@ -71,10 +71,11 @@ class TCP:
         individual_path = paths.path.split("/")  # split the paths into sections
         individual_path = list(filter(None, individual_path))  # remove blanks
 
-        if not individual_path:  # if empty, there was no filename given
+        if  url.endswith('/'):  # if empty, there was no filename given
+            print("In index")
             self.file_name = 'index.html'
         else:
-            self.file_name = 'test-MINE.log'  # take last path
+            self.file_name = url.split('/')[-1] # take last path
 
     def establish_handshake(self, url, server_port):
         """
@@ -421,37 +422,49 @@ class TCP:
 
         self.write_to_file()
 
-    def chunked_encoding(self, recv_data):
+    def chunked_encoding(self, data_received):
 
-        data = recv_data.split(b"\r\n")
+        print("This file is Chunked!")
 
-        data_total = b''
-
+        data = data_received.split(b"\r\n")
+        chunked_data = b''
         for i in range(len(data)):
-            if i % 2 == 1:
-                data_total += data[i]
+            if i % 2 != 0:
+                chunked_data += data[i]
             elif data[i] == b"0":
-                return data_total
+                return chunked_data
 
-        return data_total
+        return chunked_data
 
     def write_to_file(self):
         splitter = bytearray("\r\n\r\n", "utf-8")  # split header from content
         file = self.file_data.split(splitter)  # split header into fields
         header = file[0]
+        print(header)
         self.file_data = file[1]  # only store the body
 
-        # check status code
         status = bytearray("HTTP/1.1", "utf-8")
         if status in header:
             header = header.split()
             idx = header.index(status)
             status_code = header[idx + 1]
-
+            # check status code
             if status_code != b'200':  # only acceptable status code
                 sys.exit("Sorry, there was an error downloading the file.")
+        if b"chunked" in header:
+            contents = self.chunked_encoding(self.file_data)
+            with open(self.file_name, "wb+") as output:
+                output.write(contents)
 
-        with open(self.file_name, "wb") as output:
+            print("======FILE DOWNLOAD COMPLETE======")
+
+        else:
+            self.write_to_file_non_chunk( self.file_data)
+    def write_to_file_non_chunk(self,  file_data):
+
+        self.file_data = file_data
+
+        with open(self.file_name, "wb+") as output:
             output.write(self.file_data)
         print("======FILE DOWNLOAD COMPLETE======")
 
