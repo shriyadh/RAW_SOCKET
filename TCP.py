@@ -129,7 +129,7 @@ class TCP:
                 # create new tcp packet
                 unpack_recv = TCPPacket()
                 try:
-                    packet_recv = self.ip_socket.receive_message(self.client_ip)
+                    packet_recv = self.ip_socket.receive_message()
                 except:
                     continue
 
@@ -189,7 +189,7 @@ class TCP:
                 # create new tcp packet
                 recv_FIN_ACK = TCPPacket()
                 try:
-                    packet_recv_FIN = self.ip_socket.receive_message(self.client_ip)
+                    packet_recv_FIN = self.ip_socket.receive_message()
                 except:
                     continue
 
@@ -319,7 +319,7 @@ class TCP:
 
         # first response ack
         unpack_recv = TCPPacket()
-        packet_recv = self.ip_socket.receive_message(self.client_ip)
+        packet_recv = self.ip_socket.receive_message()
         unpack_recv.client_ip = self.server_ip
         unpack_recv.server_ip = self.client_ip
         unpack_recv.unpack_received_packet(packet_recv, self.server_ip, self.client_ip)
@@ -334,7 +334,7 @@ class TCP:
                     while True:
                         unpack_recv = TCPPacket()
                         try:
-                            packet_recv = self.ip_socket.receive_message(self.client_ip)
+                            packet_recv = self.ip_socket.receive_message()
                         except self.ip_socket.recv_socket.timeout:  # 3 minutes has passed
                             print("Sorry the connection has failed.")
                             self.ip_socket.close_sockets()
