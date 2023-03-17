@@ -168,11 +168,13 @@ class IP_Packet:
         header = received_packet[:self.ihl * 4]
         if calculate_checksum(header) != 0:
             print(calculate_checksum(header))
-            print("ERROR IN IP CHECKSUM")
+           # print("ERROR IN IP CHECKSUM")
             raise ChecksumErr("IP PACKET")
         else:
-            #print(calculate_checksum(header))
-            print("NO IP CHECKSUM ERROR")
+            pass
+            # print(calculate_checksum(header))
+           # print("NO IP CHECKSUM ERROR")
+
 
         # pass to tcp using offset value
         return self.data

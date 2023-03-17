@@ -50,7 +50,7 @@ class TCP:
         self.cwnd = 1  # max of 1000 ; set back to 1 if packet dropped
         self.file_name = ''
         self.file_path = ''
-        self.file_data = b''
+        self.file_data = bytearray()
 
     def get_file_name(self, url):
         """
@@ -548,10 +548,10 @@ class TCPPacket:
 
         if calculate_checksum(to_check) != 0:
             print(calculate_checksum(to_check))
-            print("Error in Checksum TCP")
+            #print("Error in Checksum TCP")
             raise CheckSumErr("TCP PACKET")
         else:
-            print("no error in unpacking tcp")
+           # print("no error in unpacking tcp")
             return to_check
 
 
