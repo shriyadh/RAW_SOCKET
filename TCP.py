@@ -415,6 +415,10 @@ class TCP:
         self.write_to_file()
 
     def chunked_encoding(self, data_received):
+        """
+        This method deals with chunk encoded data and parses it for the same.
+        return: parsed data
+        """
 
         print("This file is Chunked!")
 
@@ -572,6 +576,9 @@ class TCPPacket:
 
 
 class CheckSumErr(Exception):
+    """
+    This class deals with creating the checksum error exception.
+    """
     def __init__(self, type):
         self.type = type
 
