@@ -72,7 +72,6 @@ class TCP:
         individual_path = list(filter(None, individual_path))  # remove blanks
 
         if  url.endswith('/'):  # if empty, there was no filename given
-            print("In index")
             self.file_name = 'index.html'
         else:
             self.file_name = url.split('/')[-1] # take last path
@@ -286,13 +285,7 @@ class TCP:
         """
 
         # GET request
-        req = f'GET {self.file_path} HTTP/1.1\r\nHost: {self.server_name}\r\n' \
-              'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n' \
-              'Accept-Language: en-US,en;q=0.5\r\n' \
-              'Accept-Encoding: gzip, deflate\r\n' \
-              'Connection: keep-alive\r\n' \
-              'Upgrade-Insecure-Requests: 1\r\n' \
-              'Cache-Control: max-age=0\r\n\r\n'
+        req = f'GET {self.file_path} HTTP/1.1\r\nHost: {self.server_name}\r\n\r\n'
         # create http packet
         h_packet = self.create_tcp_PSH(req)
         h_seg = h_packet.pack_TCP_packet()
@@ -424,7 +417,6 @@ class TCP:
     def chunked_encoding(self, data_received):
 
         print("This file is Chunked!")
-        print(data_received)
 
         data = data_received.split(b"\r\n")
         chunked_data = b''
@@ -441,11 +433,9 @@ class TCP:
         This function writes the stored bytearray to file in the current directory
         :return: None
         """
-        #print(self.file_data)
         splitter = bytearray("\r\n\r\n", "utf-8")  # split header from content
         file = self.file_data.split(splitter)  # split header into fields
         header = file[0]
-        print(header)
         self.file_data = file[1]  # only store the body
 
         status = bytearray("HTTP/1.1", "utf-8")
@@ -456,21 +446,18 @@ class TCP:
             # check status code
             if status_code != b'200':  # only acceptable status code
                 sys.exit("Sorry, there was an error downloading the file.")
-        if b"chunked" in header:
 
+        if b"chunked" in header:
             contents = self.chunked_encoding(self.file_data)
             with open(self.file_name, "wb") as output:
                 output.write(contents)
 
             print("======FILE DOWNLOAD COMPLETE======")
-
         else:
-
             self.write_to_file_non_chunk( self.file_data)
     def write_to_file_non_chunk(self,  file_data):
 
         print("This file is not chunked")
-
         self.file_data = file_data
 
         with open(self.file_name, "wb") as output:
