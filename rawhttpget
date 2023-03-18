@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-# TOKEN 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
-# My password Benzene66
-
 
 import sys
 from TCP import TCP
