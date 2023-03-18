@@ -54,15 +54,15 @@ Our program design for **RECEIVING** data is also based on the same network flow
 <br>
 <br>
 
-**SHRIYA** <br>
+#### **SHRIYA** <br>
 Based off this understanding, I started with the basic structure of the TCP/IP pakcets. After setting up the ground functionality for parsing data from command line to getting an idea of how the first interaction on application level would be, the design decided was to have http -> tcp -> ip and backwards for receiving. I first laid out functions for packing and unpacking TCP packet which involved a lot of handling on ends like figuring out the appropriate port numbers and ip addresses for the local/remote servers and making sure the validated checksums were correct. Once that was down, it made sense to have a class TCP deal with all functionality at the TCP level. I used the rawhtttpget to create a TCP object within it and call on it to establish the three way handshake. After establishing the three way handshake and adding appropriate checks for timeout and checksums and making sure the right seq/ack numbers are handled, I implemented the connection teardown as it was very similar in logic to the previous process. Once Mariah implemented the receiving function for our program, I added functionality to control the congestion window, avoid duplicates and proper timeout and checksum errors for the same. In the end, since we decided to stick with HTTP 1.1, I implemented the chunk encoded functionality for pages with transfer encoding set to chunked. <br>
-### **CHALLENGES FACED**<br>
+#### **CHALLENGES FACED**<br>
 I think the most challenging part of this project was to come up with a good design for it. There was a lot of moving parts involved in this project and it was essential to have a good breakdown of what part of code is going to resonate with which layer. Understanding the structure of the packets and implementing the correct indices was also a challenge. We struggled a bit with checksum validation because of incorrect indexing. Handling the congestion window was extremely confusing becuase it was hard to see how it would affect the ongoing code and make it work according to the flow of the program was really tricky. It also took a lot of trials and errors to get our chunk encoded file to download correctly which I ultimately narrowed down to a problem with our GET request. Overall, I felt that this project was a step up from the previous projects and required a thorough run down of theoretical knowledge as well as good expertise in program design. 
 <br>
 
-**MARIAH** <br>
+#### **MARIAH** <br>
 
-### **CHALLENGES FACED**<br>
+#### **CHALLENGES FACED**<br>
 
 
 ## **FEATURES IMPLEMENTED**
