@@ -38,6 +38,7 @@ class TCP:
     """
        This class implements features of the TCP Layer.
     """
+
     def __init__(self):
         self.client_ip = ''
         self.client_port = -999
@@ -47,9 +48,10 @@ class TCP:
         self.ack_num = 0
         self.ip_socket = IP()
         self.cwnd = 1  # max of 1000 ; set back to 1 if packet dropped
+        self.server_name = ''
         self.file_name = ''
         self.file_path = ''
-        self.file_data = b''
+        self.file_data = bytearray()
 
     def get_file_name(self, url):
         """
@@ -58,10 +60,10 @@ class TCP:
         :return: server name
         """
         paths = urlparse(url)
-        server_name = paths.netloc
+        self.server_name = paths.netloc
 
         get_path = paths.path
-        if get_path is '':
+        if get_path == '':
             self.file_path = "/"
         else:
             self.file_path = paths.path
@@ -69,12 +71,10 @@ class TCP:
         individual_path = paths.path.split("/")  # split the paths into sections
         individual_path = list(filter(None, individual_path))  # remove blanks
 
-        if not individual_path:  # if empty, there was no filename given
+        if  url.endswith('/'):  # if empty, there was no filename given
             self.file_name = 'index.html'
         else:
-            self.file_name = 'test-MINE.log'  # take last path
-
-        return server_name
+            self.file_name = url.split('/')[-1] # take last path
 
     def establish_handshake(self, url, server_port):
         """
@@ -83,12 +83,12 @@ class TCP:
         :param server_port: host port
         :return: None
         """
+        print("======THREE WAY HANDSHAKE IN PROGRESS======")
 
         # get the file name from the server name by parsing
-        # set it to self.file_name
-        server_ip = self.get_file_name(url)
+        self.get_file_name(url)
         # server IP address # DNS === get Server IP Address
-        self.server_ip = socket.gethostbyname(server_ip)
+        self.server_ip = socket.gethostbyname(self.server_name)
         # server port is 80 (web)
         self.server_port = server_port
         # get local ip address
@@ -96,7 +96,6 @@ class TCP:
         try:
             sock.connect(("david.choffnes.com", 80))
             ip, port = sock.getsockname()
-            print("))IP*****************************************", ip)
 
         except Exception as err:
             raise err
@@ -130,7 +129,7 @@ class TCP:
                 # create new tcp packet
                 unpack_recv = TCPPacket()
                 try:
-                    packet_recv = self.ip_socket.receive_message(self.client_ip)  # NEED MARIAH"S CODE FOR THIS
+                    packet_recv = self.ip_socket.receive_message()
                 except:
                     continue
 
@@ -143,12 +142,14 @@ class TCP:
                 else:
                     continue
 
+        except CheckSumErr as err:
+            self.cwnd -= 1
+            self.ip_socket.send_message(send_backup)
         except:
-            print("EXCEPTION")
             self.cwnd = 1
-            self.ip_socket.send_message(send_backup)  # NEED MARIAH'S CODE FOR THIS
+            self.ip_socket.send_message(send_backup)
 
-        # filter packets that belong to the client
+            # filter packets that belong to the client
         if unpack_recv.ack_num == self.sq_num + 1 and unpack_recv.syn == 1 and unpack_recv.ack == 1:
             self.ack_num = unpack_recv.seq_num + 1
             self.sq_num = unpack_recv.ack_num
@@ -164,10 +165,9 @@ class TCP:
         # SEND ACK
         tcp_packet = self.create_tcp_ACK()
         tcp_seg = tcp_packet.pack_TCP_packet()
-        self.ip_socket.send_message(tcp_seg)  # NEED MARIAH'S CODE FOR THIS
+        self.ip_socket.send_message(tcp_seg)
 
-        print("################### THREE WAY HANDSHAKE #####################")
-        ################ THREE WAY HANDSHAKE ESTABLISHED #################
+        print("======THREE WAY HANDSHAKE ESTABLISHED======")
 
     def begin_teardown(self):
         """
@@ -189,7 +189,7 @@ class TCP:
                 # create new tcp packet
                 recv_FIN_ACK = TCPPacket()
                 try:
-                    packet_recv_FIN = self.ip_socket.receive_message(self.client_ip)
+                    packet_recv_FIN = self.ip_socket.receive_message()
                 except:
                     continue
 
@@ -202,7 +202,7 @@ class TCP:
                     break
                 else:
                     continue
-        except:
+        except CheckSumErr as err:
             print("TIMEOUT")
 
         self.ack_num = recv_FIN_ACK.seq_num + 1
@@ -213,9 +213,6 @@ class TCP:
         pack_final_ack = final_ack.pack_TCP_packet()
         self.ip_socket.send_message(pack_final_ack)
         self.ip_socket.close_sockets()
-
-        print("********************* CONNECTION TEARDOWN **************")
-        # self.ip_socket.close_sockets()
 
     def create_tcp_FIN(self):
         """
@@ -288,53 +285,55 @@ class TCP:
         """
 
         # GET request
-        req = f'GET {self.file_path} HTTP/1.1\r\nHost: david.choffnes.com\r\n' \
-              'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n' \
-              'Accept-Language: en-US,en;q=0.5\r\n' \
-              'Accept-Encoding: gzip, deflate\r\n' \
-              'Connection: keep-alive\r\n' \
-              'Upgrade-Insecure-Requests: 1\r\n' \
-              'Cache-Control: max-age=0\r\n\r\n'
+        req = f'GET {self.file_path} HTTP/1.1\r\nHost: {self.server_name}\r\n\r\n'
         # create http packet
         h_packet = self.create_tcp_PSH(req)
         h_seg = h_packet.pack_TCP_packet()
         self.ip_socket.send_message(h_seg)
 
-    def receive_http(self):
+        # receive the response
+        self.download_http()
+
+    def download_http(self):
         """
-        :return:
+        This function downloads the file over HTTP by sending and receiving acks.
+        Once a fin flag is received, all data has been received
+        :return: None
         """
-        # using a priority queue to keep track of in order packets
-        # put in the queue
-        # send ACKs for the first packet it is expected and add to the data field string
-        # remove from queue
-        # create priority queue
+        print("======DOWNLOAD BEGINNING======")
+
         packets = PriorityQueue()
         sequence_num_expect = self.ack_num
         fin_flag = 0
         seq_set = set()
+        # keep track of ack numbers
+        prev_sq_num = self.sq_num
+        prev_ack_num = self.ack_num
+        self.ip_socket.recv_socket.settimeout(180)  # set socket timeout to 3 minutes
 
         # first response ack
         unpack_recv = TCPPacket()
-        packet_recv = self.ip_socket.receive_message(self.client_ip)
+        packet_recv = self.ip_socket.receive_message()
         unpack_recv.client_ip = self.server_ip
         unpack_recv.server_ip = self.client_ip
         unpack_recv.unpack_received_packet(packet_recv, self.server_ip, self.client_ip)
 
         if unpack_recv.seq_num == sequence_num_expect:
-
+            print("\n ======RECEIVING PACKETS======\n")
             # receive the incoming packets in a loop until all http data received
-
             while not fin_flag:
-
+                self.ip_socket.recv_socket.settimeout(180)  # give socket 3 minutes to receive data
                 try:
-                    cur = time.time()
-                    while (time.time() - cur) < 60:
+                    current_time = time.time()
+                    while True:
                         unpack_recv = TCPPacket()
                         try:
-                            packet_recv = self.ip_socket.receive_message(self.client_ip)
-                        except:
-                            continue
+                            packet_recv = self.ip_socket.receive_message()
+                        except self.ip_socket.recv_socket.timeout:  # 3 minutes has passed
+                            print("Sorry the connection has failed.")
+                            self.ip_socket.close_sockets()
+                            sys.exit()
+                        # retrieve fields from packet
                         unpack_recv.client_ip = self.server_ip
                         unpack_recv.server_ip = self.client_ip
                         unpack_recv.unpack_received_packet(packet_recv, self.server_ip, self.client_ip)
@@ -342,19 +341,32 @@ class TCP:
                         # Filter out
                         if unpack_recv.client_port == self.server_port and unpack_recv.server_port == self.client_port:
                             break
-                        else:
-                            continue
-                except:
-                    print("timeout")
-                    self.cwnd = 1
-                    # SEND BACK UP ACKKKKK ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-                # get the sequence number and length of the packet
+                        response_time = time.time() - current_time  # get how much time has passed since ack
+
+                        if response_time >= 60:  # one minute passes
+                            # resend ack
+                            self.cwnd = 1
+
+                            # retrieve preciously sent ack num and sequence nums
+                            self.sq_num = prev_sq_num
+                            self.ack_num = prev_ack_num
+
+                            # create and send backup ack
+                            resp_ack = self.create_tcp_ACK()
+                            resp_packet = resp_ack.pack_TCP_packet()
+                            self.ip_socket.send_message(resp_packet)
+                            current_time = time.time()
+                            continue
+
+                except CheckSumErr as err:
+                    self.cwnd -= 1
+
+                # get the sequence number, ack num, and http data of the packet
                 sequence_num = unpack_recv.seq_num
                 aknow_num = unpack_recv.ack_num
                 http_data = unpack_recv.data
                 fin_flag = unpack_recv.fin
-                length = len(http_data)
 
                 # add the sequence number and data to the queue
                 # check if seq number is already in the set === DROP DUPLICATES
@@ -365,26 +377,28 @@ class TCP:
                     # do nothing --- do not add to queue cause DUPLICATE
                     pass
 
-                # check to see if buffer is ordered
-                # will need to account for case that seq. no not received
-                # will need to send multiple acks
-                while not packets.empty() and packets.queue[0][0] == sequence_num_expect: # while we have the expected seq num
-                    d = packets.get()
+                # while we have the expected sequence number
+                while not packets.empty() and packets.queue[0][0] == sequence_num_expect:
+                    d = packets.get()  # pop the first packet
                     sequence_num = d[0]
-                    http_data = d[1]  # get associated http data
-                    self.file_data += http_data  # add to byte string
+                    http_data = d[1]
+                    self.file_data += http_data  # add to bytearray
 
-                    # updated ack and seq number
                     length = len(http_data)
-                    self.sq_num = aknow_num
+                    self.sq_num = aknow_num  # updated ack and seq number
                     self.ack_num = sequence_num + length
+
+                    # update the stored acknowledgement number and sequence number
+                    prev_sq_num = self.sq_num
+                    prev_ack_num = self.ack_num
+
                     # congestion window
-                    if self.cwnd +1 >= 1000:
+                    if self.cwnd + 1 >= 1000:
                         self.cwnd = 1000
                     else:
                         self.cwnd += 1
 
-                    if fin_flag == 0:
+                    if fin_flag == 0:  # more data to come
                         # send ack
                         resp_ack = self.create_tcp_ACK()
                         resp_packet = resp_ack.pack_TCP_packet()
@@ -393,55 +407,74 @@ class TCP:
                         # update the expected num
                         sequence_num_expect = self.ack_num
 
-                    if fin_flag == 1:
+                    if fin_flag == 1:  # all data received
                         # send fin
-                        # resp_fin = self.create_tcp_FIN()
-                        # resp_packet = resp_fin.pack_TCP_packet()
-                        print("###############BEGINNING TEARDOWN")
                         self.ack_num = sequence_num + 1
                         self.begin_teardown()
 
-                        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-
         self.write_to_file()
 
-    def chunked_encoding(self, recv_data):
+    def chunked_encoding(self, data_received):
+        """
+        This method deals with chunk encoded data and parses it for the same.
+        return: parsed data
+        """
 
-        data = recv_data.split(b"\r\n")
+        print("This file is Chunked!")
 
-        data_total = b''
-
+        data = data_received.split(b"\r\n")
+        chunked_data = b''
         for i in range(len(data)):
-            if i % 2 == 1:
-                data_total += data[i]
+            if i % 2 ==1:
+                chunked_data += data[i]
             elif data[i] == b"0":
-                return data_total
+                return chunked_data
 
-        return  data_total
+        return chunked_data
 
     def write_to_file(self):
+        """
+        This function writes the stored bytearray to file in the current directory
+        :return: None
+        """
         splitter = bytearray("\r\n\r\n", "utf-8")  # split header from content
         file = self.file_data.split(splitter)  # split header into fields
-
         header = file[0]
         self.file_data = file[1]  # only store the body
 
-        # check status code
         status = bytearray("HTTP/1.1", "utf-8")
         if status in header:
-            print("IN HEADERRRRR CORECT STATUS")
             header = header.split()
             idx = header.index(status)
             status_code = header[idx + 1]
-            print(status_code)
-            if status_code != b'200':
+            # check status code
+            if status_code != b'200':  # only acceptable status code
                 sys.exit("Sorry, there was an error downloading the file.")
+
+        if b"chunked" in header:
+            contents = self.chunked_encoding(self.file_data)
+            with open(self.file_name, "wb") as output:
+                output.write(contents)
+
+            print("======FILE DOWNLOAD COMPLETE======")
+        else:
+            self.write_to_file_non_chunk( self.file_data)
+    def write_to_file_non_chunk(self,  file_data):
+
+        print("This file is not chunked")
+        self.file_data = file_data
 
         with open(self.file_name, "wb") as output:
             output.write(self.file_data)
+        print("======FILE DOWNLOAD COMPLETE======")
 
 
 class TCPPacket:
+    """
+    This class represents the TCP header as seen in datagrams.
+    All fields within the TCP header are given as instance variables.
+    This class contains two methods for packing and unpacking a TCP packet
+    """
 
     def __init__(self, data=b'', src_port=0, dest_port=80, src_ip='', dest_ip=''):
         self.client_ip = src_ip
@@ -464,6 +497,10 @@ class TCPPacket:
         self.data = data
 
     def pack_TCP_packet(self):
+        """
+        This method creates a packet with a TCP header and correctly computes the checksum
+        :return: TCP Segment
+        """
 
         tcp_offset_res = (self.offset << 4) + 0
         tcp_flags = self.fin + (self.syn << 1) + (self.rst << 2) + (self.psh << 3) + (self.ack << 4) + (self.urg << 5)
@@ -471,7 +508,7 @@ class TCPPacket:
         tcp_header_without_checksum = struct.pack('!HHLLBBH', self.client_port, self.server_port, self.seq_num,
                                                   self.ack_num, tcp_offset_res, tcp_flags,
                                                   self.wnd_size) + struct.pack('H', self.checksum) \
-                                      + struct.pack('!H',self.urg_ptr)
+                                      + struct.pack('!H', self.urg_ptr)
         # pseudo header fields from IP header -- should have source IP, Destination IP, Protocol field
         # TCP length, TCP header ===== needed for calculating checksum accurately
 
@@ -493,6 +530,11 @@ class TCPPacket:
         return tcp_segment
 
     def unpack_received_packet(self, recv_segment, client, server):
+        """
+        This method unpacks a packet after it has been received from the IP class.
+        It accurately computes the checksum to ensure the data has not been corrupted.
+        :return:
+        """
         tcp_header = struct.unpack('!HHLLBBH', recv_segment[0:16])
         self.client_ip = client
         self.server_ip = server
@@ -508,7 +550,6 @@ class TCPPacket:
         self.urg = struct.unpack('!H', recv_segment[18:20])
         self.data = recv_segment[self.offset:]
 
-
         # flags in segment
         self.fin = flags & 0x01
         self.syn = (flags & 0x02) >> 1
@@ -519,7 +560,7 @@ class TCPPacket:
 
         # pseudo header fields from IP header -- should have source IP, Destination IP, Protocol field
         # TCP length, TCP header ===== needed for calculating checksum accurately
-        tcp_len = len(recv_segment)
+        tcp_len = len(self.data) + self.offset
 
         pseudo_header = struct.pack('!4s4sBBH',
                                     socket.inet_aton(self.client_ip),
@@ -527,14 +568,19 @@ class TCPPacket:
                                     0, socket.IPPROTO_TCP, tcp_len)
 
         to_check = pseudo_header + recv_segment
-        print(hex(calculate_checksum(to_check)))
 
-        if calculate_checksum(to_check) != 0:
-            print("here")
-            print(calculate_checksum(to_check))
-            print(hex(calculate_checksum(to_check)))
-            print("Error in Checksum TCP")
+        if calculate_checksum(to_check) != 0:  # error in packet
+            raise CheckSumErr("TCP PACKET")
+        else:  # packet is fine
             pass
-        else:
-            print("no error in unpacking tcp")
-            return to_check
+
+
+class CheckSumErr(Exception):
+    """
+    This class deals with creating the checksum error exception.
+    """
+    def __init__(self, type):
+        self.type = type
+
+    def __str__(self):
+        return self.type + "Checksum Error"

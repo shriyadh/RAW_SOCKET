@@ -1,5 +1,6 @@
 import socket
 import struct
+import sys
 from random import randint
 
 
@@ -34,6 +35,7 @@ class IP:
     and sends it to the server.
     It receives responses from the server, unpacks the IP Header and passes on the TCP segment to the TCP class.
     """
+
     def __init__(self, src_ip='', dest_ip='', client_port=''):
         self.client_ip = src_ip
         self.server_ip = dest_ip
@@ -49,22 +51,18 @@ class IP:
         self.recv_socket.close()
         self.send_socket.close()
 
-    def receive_message(self, client_address):
+    def receive_message(self):
         """
         It receives responses from the server, unpacks the IP Header and passes on the TCP segment to the TCP class.
-        :param client_address: Local IP address
         :return: TCP segment
         """
 
-        try:
-            while True:
-                recv_pack = IP_Packet()
-                unpack_this = self.recv_socket.recv(2048)
-                recv_pack.unpack_packet(unpack_this)
-                if recv_pack.client_ip == self.server_ip and recv_pack.server_ip == self.client_ip and recv_pack.protocol == socket.IPPROTO_TCP:
-                    return recv_pack.data
-        except:
-            print("TIMEOUT")
+        while True: # receive in loop if packet doesnt pass check
+            recv_pack = IP_Packet()
+            unpack_this = self.recv_socket.recv(2048)
+            recv_pack.unpack_packet(unpack_this)
+            if recv_pack.client_ip == self.server_ip and recv_pack.server_ip == self.client_ip and recv_pack.protocol == socket.IPPROTO_TCP:
+                return recv_pack.data
 
     def send_message(self, tcp_seg):
         """
@@ -91,6 +89,7 @@ class IP_Packet:
     This class represents the IP header as we see it in IP datagrams. It contains all the required fields for the
     header and contains methods for packing and unpacking IP headers.
     """
+
     def __init__(self, src_ip='', dest_ip='', tcp_seg=b''):
         self.version = 4
         self.ihl = 5
@@ -166,12 +165,18 @@ class IP_Packet:
         self.data = received_packet[self.ihl * 4: self.length]
         # ======= validate checksum ======
         header = received_packet[:self.ihl * 4]
-        if calculate_checksum(header) != 0:
-            print(calculate_checksum(header))
-            print("ERROR IN IP CHECKSUM")
-        else:
-            #print(calculate_checksum(header))
-            print("NO IP CHECKSUM ERROR")
+        if calculate_checksum(header) != 0:  # error in packet
+            raise CheckSumErr("IP PACKET")
+        else: # packet is fine
+            pass
 
         # pass to tcp using offset value
         return self.data
+
+
+class CheckSumErr(Exception):
+    def __init__(self, type):
+        self.type = type
+
+    def __str__(self):
+        return self.type + "Checksum Error"

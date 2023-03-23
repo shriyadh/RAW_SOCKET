@@ -1,14 +1,6 @@
 #!/usr/bin/env python3
-# TOKEN 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
-# My password Benzene66
 
-
-import ssl
-import socket
 import sys
-from random import randint
-from struct import *
-from urllib.parse import urlparse
 from TCP import TCP
 
 
@@ -38,58 +30,7 @@ def start_download(url):
     tcp_ip_socket = TCP()
     tcp_ip_socket.establish_handshake(url, 80)
     tcp_ip_socket.send_http_req()
-    tcp_ip_socket.receive_http()
 
-
-def main():
-    # parse the cmd line to get the url download link
-    url = parse_cmd_line()
-    # create the Application-TCP-IP layers and send request for download
-    start_download(url)
-
-
-if __name__ == "__main__":
-    main()#!/usr/bin/env python3
-# TOKEN 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
-# My password Benzene66
-
-
-import ssl
-import socket
-import sys
-from random import randint
-from struct import *
-from urllib.parse import urlparse
-from TCP import TCP
-
-
-def parse_cmd_line():
-    """
-    Parses command line arguments to retrieve file to be downloaded.
-    :return: url for downloading file.
-    """
-
-    if len(sys.argv) > 2:
-        sys.exit("Expected 2 inputs. Found more.")
-
-    try:
-        url = sys.argv[1]
-    except:
-        sys.exit("Please provide proper URL")
-
-    return url
-
-
-def start_download(url):
-    """
-    This method deals with linking the TCP - IP layers with the application layers.
-    Drives the flow of the program -- establish handshake, send request and receive/write data to file.
-    :param url: link to be downloaded
-    """
-    tcp_ip_socket = TCP()
-    tcp_ip_socket.establish_handshake(url, 80)
-    tcp_ip_socket.send_http_req()
-    tcp_ip_socket.receive_http()
 
 
 def main():
