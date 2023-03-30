@@ -7,7 +7,7 @@ Project by - Mariah Maynard and Shriya Dhaundiyal
 ## **HIGH LEVEL_APPROACH -- UNDERSTANDING PROJECT DESGIN**
 
 In order to start this project, we needed an in-depth understanding of the OSI model and the role of each layer. 
-This project required us to get familiar with low-level operations of the internet protocol stack. We had to go beyond implemeting application level protocols (HTTP GET/ RECEIVE) and build IP and TCP headers in each packet for sending and receicing data.
+This project required us to get familiar with low-level operations of the internet protocol stack. We had to go beyond implemeting application level protocols (HTTP GET/ RECEIVE) and build IP and TCP headers in each packet for sending and receiving data.
 
 We based our understanding of the project on the following steps:
 
